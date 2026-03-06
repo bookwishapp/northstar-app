@@ -78,6 +78,8 @@ model Template {
   id              String    @id @default(cuid())
   holidaySlug     String
   name            String
+  location        String    @default("North Pole")
+  isActive        Boolean   @default(true)
 
   // Visual config — all asset paths are S3 keys
   backgroundKey   String?   // S3 key for background image
