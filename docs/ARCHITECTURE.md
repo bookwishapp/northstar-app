@@ -577,10 +577,10 @@ DATABASE_URL=                   # Railway Postgres connection string
 GOTENBERG_URL=http://northstar-gotenberg:3000
 
 # AWS
-AWS_REGION=
+AWS_REGION=us-east-2
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-AWS_S3_BUCKET=northstar-postal
+AWS_S3_BUCKET=north-star-postal-letters
 
 # OpenAI
 OPENAI_API_KEY=

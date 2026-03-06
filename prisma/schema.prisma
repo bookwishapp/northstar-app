@@ -1,0 +1,121 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Source
+  source            String      @default("etsy") // "etsy" | "website"
+  externalOrderId   String?     // Etsy order ID for reference
+
+  // Program
+  holidaySlug       String      // "christmas" | "easter" | "birthday" | etc.
+  programId         String      // references Program.id
+  deliveryType      String      // "digital" | "physical"
+
+  // Claim
+  claimToken        String      @unique @default(cuid())
+  claimedAt         DateTime?
+
+  // Customer (collected at claim)
+  customerEmail     String?
+  customerName      String?
+  emailConsent      Boolean     @default(false)
+
+  // Recipient personalization (collected at claim)
+  recipientName     String?
+  recipientAge      Int?
+  recipientDetails  Json?       // flexible key/value for holiday-specific fields
+
+  // Physical delivery (collected at claim if deliveryType = physical)
+  deliveryAddress   Json?       // { line1, line2, city, state, zip, country }
+
+  // Generation
+  generatedLetter   String?     // raw AI text
+  generatedStory    String?     // raw AI text
+
+  // PDFs (S3 keys)
+  letterPdfKey      String?
+  storyPdfKey       String?
+  envelopePdfKey    String?     // digital orders only
+
+  // Fulfillment
+  postgridLetterId  String?     // physical orders
+
+  // Status machine (see Order Status below)
+  status            String      @default("pending_claim")
+  errorMessage      String?     // last error if status = failed
+
+  program           Program     @relation(fields: [programId], references: [id])
+}
+
+model Program {
+  id              String    @id @default(cuid())
+  holidaySlug     String    // "christmas" | "easter" | "birthday" | etc.
+  name            String    // "Santa Letter — Deluxe"
+  tier            String    // "standard" | "deluxe"
+  deliveryTypes   String[]  // ["digital", "physical"] or just ["digital"]
+  priceDigital    Float?
+  pricePhysical   Float?
+  isActive        Boolean   @default(true)
+  templateId      String
+  template        Template  @relation(fields: [templateId], references: [id])
+  orders          Order[]
+}
+
+model Template {
+  id              String    @id @default(cuid())
+  holidaySlug     String
+  name            String
+
+  // Visual config — all asset paths are S3 keys
+  backgroundKey   String?   // S3 key for background image
+  headerKey       String?   // S3 key for header graphic
+  characterKey    String?   // S3 key for character graphic
+  waxSealKey      String?   // S3 key for wax seal/stamp graphic
+  signatureKey    String?   // S3 key for signature block graphic
+
+  // Typography
+  fontFamily      String    @default("Special Elite")
+  fontUrl         String    @default("https://fonts.googleapis.com/css2?family=Special+Elite&display=swap")
+  primaryColor    String    @default("#2c1810")
+  accentColor     String    @default("#8b0000")
+
+  // Layout
+  paperSize       String    @default("letter") // "letter" | "a4"
+  marginTop       String    @default("1.2in")
+  marginBottom    String    @default("1in")
+  marginLeft      String    @default("0.9in")
+  marginRight     String    @default("0.9in")
+
+  // Multi-page behavior
+  repeatBackground      Boolean @default(true)
+  headerFirstPageOnly   Boolean @default(true)
+  waxSealLastPageOnly   Boolean @default(true)
+
+  // AI prompt config
+  character       String    // "Santa Claus" | "Easter Bunny" | etc.
+  characterTone   String    // "warm, magical, believes in the child"
+  letterPrompt    String    // Full system prompt for letter generation
+  storyPrompt     String    // Full system prompt for story generation
+
+  programs        Program[]
+}
+
+model AdminUser {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  passwordHash String
+  createdAt   DateTime  @default(now())
+}
