@@ -7,5 +7,5 @@ execSync('npx prisma migrate deploy', { stdio: 'inherit' });
 // Start standalone server
 console.log('Starting server...');
 process.env.HOSTNAME = '0.0.0.0';
-process.env.PORT = process.env.PORT || '3000';
+process.env.PORT = '3000';  // Railway domain expects port 3000
 require('./.next/standalone/server.js');
