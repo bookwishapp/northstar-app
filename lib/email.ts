@@ -141,7 +141,7 @@ export async function sendClaimEmail(order: any): Promise<void> {
     <body>
       <div class="container">
         <div class="header">
-          <h1>✨ North Star Postal ✨</h1>
+          <h1>North Star Postal</h1>
           <p>Magical Letters from ${character}</p>
         </div>
 
@@ -155,7 +155,7 @@ export async function sendClaimEmail(order: any): Promise<void> {
           </div>
 
           <div style="text-align: center;">
-            <a href="${claimUrl}" class="cta-button">Personalize Your Letter Now →</a>
+            <a href="${claimUrl}" class="cta-button">Personalize Your Letter Now</a>
             <div class="url-fallback">
               Or copy this link: ${claimUrl}
             </div>
@@ -283,7 +283,7 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
     pdfS3Keys.envelopeKey ? getPresignedDownloadUrl(pdfS3Keys.envelopeKey, 86400) : Promise.resolve(null),
   ]);
 
-  const subject = `🎁 ${order.recipientName}'s ${holidayName} Letter Has Arrived!`;
+  const subject = `${order.recipientName}'s ${holidayName} Letter Has Arrived!`;
 
   const htmlBody = `
     <!DOCTYPE html>
@@ -378,7 +378,7 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎄 Your Magical Letter Has Arrived! 🎄</h1>
+          <h1>Your Magical Letter Has Arrived!</h1>
           <p>From ${character} with Love</p>
         </div>
 
@@ -395,20 +395,20 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
 
           <div class="pdf-section">
             <div class="pdf-item">
-              <h3>📜 The Letter from ${character}</h3>
+              <h3>The Letter from ${character}</h3>
               <p>A personalized letter filled with magic and wonder, written just for ${order.recipientName}.</p>
               <a href="${letterUrl}" class="download-button">Download Letter</a>
             </div>
 
             <div class="pdf-item">
-              <h3>📖 ${order.recipientName}'s Magical Story</h3>
+              <h3>${order.recipientName}'s Magical Story</h3>
               <p>An enchanting story featuring ${order.recipientName} as the hero!</p>
               <a href="${storyUrl}" class="download-button">Download Story</a>
             </div>
 
             ${envelopeUrl ? `
               <div class="pdf-item">
-                <h3>✉️ Special Delivery Envelope</h3>
+                <h3>Special Delivery Envelope</h3>
                 <p>A decorative envelope to complete the magical experience!</p>
                 <a href="${envelopeUrl}" class="download-button">Download Envelope</a>
               </div>
@@ -416,7 +416,7 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
           </div>
 
           <div class="instructions">
-            <h3>✨ How to Create the Magic:</h3>
+            <h3>How to Create the Magic:</h3>
             <ol>
               <li><strong>Download all PDFs</strong> using the buttons above (links expire in 24 hours)</li>
               <li><strong>Print on quality paper</strong> for the best experience</li>

@@ -21,9 +21,11 @@ export default function AdminNav({ userEmail }: { userEmail: string }) {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-red-600">
-                North Star Admin
-              </h1>
+              <img
+                src="/images/logo.png"
+                alt="North Star Postal"
+                className="h-8 w-auto"
+              />
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {navItems.map((item) => (

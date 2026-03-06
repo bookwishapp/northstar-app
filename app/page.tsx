@@ -1,7 +1,13 @@
 export default function HomePage() {
   return (
     <main className="min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-4">North Star Postal</h1>
+      <div className="mb-6">
+        <img
+          src="/images/logo.png"
+          alt="North Star Postal"
+          className="h-12 w-auto"
+        />
+      </div>
       <p className="text-lg text-gray-600">
         Magical personalized holiday letters - Backend rebuild in progress
       </p>

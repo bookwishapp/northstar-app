@@ -113,7 +113,7 @@ export default async function AdminDashboard() {
               href="/admin/orders"
               className="text-sm text-red-600 hover:text-red-700"
             >
-              View all →
+              View all
             </Link>
           </div>
           <div className="overflow-hidden">
