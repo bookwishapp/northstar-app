@@ -20,6 +20,8 @@ async function main() {
       id: 'template-easter',
       holidaySlug: 'easter',
       name: 'Easter Bunny Letter',
+      location: 'Easter Garden',
+      isActive: true,
 
       // S3 asset keys — update filenames to match your actual uploads
       backgroundKey: 'templates/easter/background.jpg',

@@ -46,142 +46,192 @@ export const claimFields: Record<string, Field[]> = {
 
   easter: [
     {
-      key: 'favorite_activity',
-      label: "What's their favorite spring activity?",
+      key: 'favoriteSpringActivity',
+      label: "What's their favorite thing about spring?",
+      placeholder: "Playing outside, looking for bugs, riding their bike...",
       type: 'text',
-      placeholder: 'Playing outside, hunting for eggs, gardening...',
-      required: true
+      required: true,
     },
     {
-      key: 'favorite_treat',
-      label: "What's their favorite Easter treat?",
+      key: 'bigAccomplishment',
+      label: "What's something great they've done recently?",
+      placeholder: "Learned to read, made a new friend, helped someone...",
       type: 'text',
-      placeholder: 'Chocolate eggs, jelly beans, marshmallow peeps...',
-      required: true
+      required: true,
     },
     {
-      key: 'pet_name',
-      label: "Do they have a pet? What's its name?",
+      key: 'currentInterest',
+      label: "What are they really into right now?",
+      placeholder: "Dinosaurs, Minecraft, gymnastics, drawing...",
       type: 'text',
-      placeholder: 'Optional - leave blank if no pets'
+      required: true,
     },
     {
-      key: 'kindness',
-      label: "A recent act of kindness they've done?",
-      type: 'textarea',
-      placeholder: 'Helping a friend, sharing toys, being kind to animals...'
-    }
+      key: 'petOrSibling',
+      label: "Any pets or siblings the Easter Bunny should mention?",
+      placeholder: "Dog named Max, little sister Lily... (optional)",
+      type: 'text',
+      required: false,
+    },
+    {
+      key: 'favoriteColor',
+      label: "What's their favorite color?",
+      placeholder: "Purple, rainbow, blue...",
+      type: 'text',
+      required: false,
+    },
   ],
 
   birthday: [
     {
-      key: 'turning_age',
-      label: "How old are they turning?",
-      type: 'number',
-      required: true
-    },
-    {
-      key: 'party_theme',
-      label: "Birthday party theme or favorite thing?",
+      key: 'newAge',
+      label: "What age are they turning?",
+      placeholder: "5, 6, 7...",
       type: 'text',
-      placeholder: 'Superheroes, princesses, dinosaurs, sports...',
-      required: true
+      required: true,
     },
     {
-      key: 'favorite_activity',
-      label: "What do they love doing?",
-      type: 'text',
-      placeholder: 'Drawing, playing games, reading, building...',
-      required: true
-    },
-    {
-      key: 'birthday_wish',
-      label: "What's their birthday wish?",
+      key: 'accomplishments',
+      label: "What are they proud of from this past year?",
+      placeholder: "Learned to ride a bike, made the soccer team, read 50 books...",
       type: 'textarea',
-      placeholder: 'What are they hoping for on their special day?'
+      required: true,
     },
     {
-      key: 'best_friend',
-      label: "Best friend's name?",
+      key: 'currentInterests',
+      label: "What are they really into right now?",
+      placeholder: "Pokemon, gymnastics, Lego, drawing...",
       type: 'text',
-      placeholder: 'Optional - for a special mention'
-    }
+      required: true,
+    },
+    {
+      key: 'birthdayWish',
+      label: "What's their big birthday wish?",
+      placeholder: "A puppy, to learn guitar, to visit Disneyland...",
+      type: 'text',
+      required: false,
+    },
+    {
+      key: 'specialQualities',
+      label: "What makes them special?",
+      placeholder: "Kind to everyone, creative, funny, brave...",
+      type: 'textarea',
+      required: false,
+    },
   ],
 
   valentine: [
     {
-      key: 'favorite_person',
-      label: "Who is their favorite person to spend time with?",
-      type: 'text',
-      required: true
-    },
-    {
-      key: 'kind_deed',
-      label: "Something kind they did recently?",
+      key: 'kindActions',
+      label: "How have they shown kindness recently?",
+      placeholder: "Helped a friend, shared their toys, made someone smile...",
       type: 'textarea',
-      placeholder: 'Sharing, helping, being a good friend...',
-      required: true
+      required: true,
     },
     {
-      key: 'favorite_activity',
-      label: "Favorite thing to do with friends or family?",
+      key: 'bestFriends',
+      label: "Who are their best friends?",
+      placeholder: "Sarah from school, cousin Jake, neighbor Emma...",
       type: 'text',
-      placeholder: 'Playing games, reading stories, going to the park...'
-    }
+      required: true,
+    },
+    {
+      key: 'showsLove',
+      label: "How do they show love to family?",
+      placeholder: "Hugs, helping with chores, drawing pictures...",
+      type: 'text',
+      required: true,
+    },
+    {
+      key: 'favoriteActivities',
+      label: "What do they love doing?",
+      placeholder: "Reading, playing soccer, building with Lego...",
+      type: 'text',
+      required: false,
+    },
+    {
+      key: 'pets',
+      label: "Any pets they love?",
+      placeholder: "Dog named Max, cat named Whiskers... (optional)",
+      type: 'text',
+      required: false,
+    },
   ],
 
   halloween: [
     {
       key: 'costume',
-      label: "What are they dressing up as this Halloween?",
+      label: "What's their Halloween costume this year?",
+      placeholder: "Astronaut, princess, dinosaur, superhero...",
       type: 'text',
-      required: true
+      required: true,
     },
     {
-      key: 'favorite_candy',
+      key: 'favoriteCandy',
       label: "What's their favorite Halloween candy?",
+      placeholder: "Chocolate bars, gummy bears, lollipops...",
       type: 'text',
-      required: true
+      required: true,
     },
     {
-      key: 'brave_moment',
-      label: "Something brave they've done recently?",
+      key: 'halloweenActivity',
+      label: "What Halloween activity do they love?",
+      placeholder: "Carving pumpkins, trick-or-treating, decorating...",
+      type: 'text',
+      required: true,
+    },
+    {
+      key: 'braveMoment',
+      label: "When have they been brave recently?",
+      placeholder: "Tried something new, stood up for a friend...",
       type: 'textarea',
-      placeholder: 'Trying something new, overcoming a fear...'
+      required: false,
     },
     {
-      key: 'spooky_fun',
-      label: "Do they like spooky things or prefer fun Halloween?",
-      type: 'select',
-      options: ['Loves spooky', 'Prefers fun and silly', 'A little of both']
-    }
+      key: 'bestFriend',
+      label: "Who are they trick-or-treating with?",
+      placeholder: "Best friend Emma, siblings, cousins... (optional)",
+      type: 'text',
+      required: false,
+    },
   ],
 
   stpatricks: [
     {
-      key: 'lucky_charm',
+      key: 'luckyMoment',
+      label: "What's a lucky or special moment they had this year?",
+      placeholder: "Won a contest, made a new friend, found something special...",
+      type: 'textarea',
+      required: true,
+    },
+    {
+      key: 'specialTalent',
+      label: "What's their special talent or skill?",
+      placeholder: "Great at sports, tells funny jokes, amazing artist...",
+      type: 'text',
+      required: true,
+    },
+    {
+      key: 'makesThemLucky',
       label: "What makes them feel lucky?",
+      placeholder: "Their family, their pet, their friends...",
       type: 'text',
-      required: true
+      required: true,
     },
     {
-      key: 'favorite_green',
-      label: "Favorite green thing?",
+      key: 'favoriteGreenThing',
+      label: "What's their favorite green thing?",
+      placeholder: "Green apples, grass, their green bike... (optional)",
       type: 'text',
-      placeholder: 'Green shirt, grass, trees, vegetables...',
-      required: true
+      required: false,
     },
     {
-      key: 'irish_heritage',
-      label: "Any Irish heritage or traditions?",
+      key: 'wishForLuck',
+      label: "What would they wish for if they found a pot of gold?",
+      placeholder: "A treehouse, world peace, a puppy... (optional)",
       type: 'text',
-      placeholder: 'Optional - family traditions or heritage'
+      required: false,
     },
-    {
-      key: 'rainbow_wish',
-      label: "If they found a pot of gold, what would they wish for?",
-      type: 'textarea'
-    }
   ]
 };
 
