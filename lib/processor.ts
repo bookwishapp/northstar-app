@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { generateContent } from '@/lib/ai';
 import { renderPdfs } from '@/lib/pdf';
 import { sendDeliveryEmail } from '@/lib/email';
+import { sendPhysicalLetter } from '@/lib/postgrid';
 
 /**
  * Process an order through the state machine
@@ -149,9 +150,36 @@ export async function processOrder(orderId: string): Promise<void> {
         throw error;
       }
     } else {
-      // For physical delivery, the order stays in pending_delivery
-      // until PostGrid confirms delivery (Step 13)
-      console.log(`Order ${orderId} ready for physical delivery via PostGrid`);
+      // Physical delivery via PostGrid
+      console.log(`Sending physical letter via PostGrid for order ${orderId}`);
+
+      try {
+        const postgridResponse = await sendPhysicalLetter(order);
+        console.log(`PostGrid letter created: ${postgridResponse.id}`);
+
+        // Update order with PostGrid ID
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            postgridLetterId: postgridResponse.id,
+          },
+        });
+
+        // Order will be marked as delivered when PostGrid webhook confirms delivery
+        console.log(`Physical letter queued for delivery via PostGrid for order ${orderId}`);
+      } catch (error) {
+        console.error(`Failed to send physical letter for order ${orderId}:`, error);
+
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Physical delivery failed',
+          },
+        });
+
+        throw error;
+      }
     }
 
     console.log(`Order processing completed for ${orderId}`);
@@ -345,7 +373,34 @@ async function continueFromDelivery(orderId: string): Promise<void> {
       throw error;
     }
   } else {
-    // For physical delivery, the order stays in pending_delivery
-    console.log(`Order ${orderId} ready for physical delivery via PostGrid`);
+    // Physical delivery via PostGrid
+    console.log(`Sending physical letter via PostGrid for order ${orderId}`);
+
+    try {
+      const postgridResponse = await sendPhysicalLetter(order);
+      console.log(`PostGrid letter created: ${postgridResponse.id}`);
+
+      // Update order with PostGrid ID
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          postgridLetterId: postgridResponse.id,
+        },
+      });
+
+      console.log(`Physical letter queued for delivery via PostGrid for order ${orderId}`);
+    } catch (error) {
+      console.error(`Failed to send physical letter for order ${orderId}:`, error);
+
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Physical delivery failed',
+        },
+      });
+
+      throw error;
+    }
   }
 }

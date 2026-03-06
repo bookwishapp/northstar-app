@@ -6,7 +6,8 @@ interface OrderData {
   createdAt: string;
   claimedAt?: string;
   recipientName?: string;
-  statusMessage: string;
+  postgridLetterId?: string;
+  errorMessage?: string;
 }
 
 interface Props {
@@ -125,15 +126,17 @@ export default function OrderStatus({ order }: Props) {
       </div>
 
       {/* Status Message */}
-      <div className={`mb-8 p-4 rounded-lg ${
-        isFailed ? 'bg-red-50 border border-red-200' : 'bg-blue-50 border border-blue-200'
-      }`}>
-        <p className={`text-sm font-medium ${
-          isFailed ? 'text-red-800' : 'text-blue-800'
+      {(order.errorMessage || order.postgridLetterId) && (
+        <div className={`mb-8 p-4 rounded-lg ${
+          isFailed ? 'bg-red-50 border border-red-200' : 'bg-blue-50 border border-blue-200'
         }`}>
-          {order.statusMessage}
-        </p>
-      </div>
+          <p className={`text-sm font-medium ${
+            isFailed ? 'text-red-800' : 'text-blue-800'
+          }`}>
+            {order.errorMessage || (order.postgridLetterId && `Tracking ID: ${order.postgridLetterId}`)}
+          </p>
+        </div>
+      )}
 
       {/* Timeline */}
       {!isFailed && (
