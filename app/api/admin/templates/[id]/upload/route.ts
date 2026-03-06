@@ -13,12 +13,12 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // TODO: Add admin authentication check here
 
-    const { id: templateId } = params;
+    const { id: templateId } = await params;
 
     // Get form data
     const formData = await request.formData();

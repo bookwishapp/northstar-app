@@ -8,10 +8,10 @@ import { z } from 'zod';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const { token } = params;
+    const { token } = await params;
 
     // Find order by claim token
     const order = await prisma.order.findUnique({
@@ -91,10 +91,10 @@ const claimSchema = z.object({
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const { token } = params;
+    const { token } = await params;
     const body = await request.json();
 
     // Validate request body
@@ -138,7 +138,7 @@ export async function POST(
         recipientName: validatedData.recipientName,
         recipientAge: validatedData.recipientAge,
         recipientDetails: validatedData.recipientDetails || {},
-        deliveryAddress: validatedData.deliveryAddress || null,
+        deliveryAddress: validatedData.deliveryAddress || undefined,
         emailConsent: validatedData.emailConsent,
         status: 'pending_generation',
       },

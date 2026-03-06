@@ -15,9 +15,9 @@ const FROM_EMAIL = 'hello@northstarpostal.com';
 const FROM_NAME = 'North Star Postal';
 
 interface PdfKeys {
-  letterPdfKey: string;
-  storyPdfKey: string;
-  envelopePdfKey: string | null;
+  letterKey: string;
+  storyKey: string;
+  envelopeKey: string | null;
 }
 
 /**
@@ -278,9 +278,9 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
 
   // Generate presigned URLs for PDFs (24 hour expiry)
   const [letterUrl, storyUrl, envelopeUrl] = await Promise.all([
-    getPresignedDownloadUrl(pdfS3Keys.letterPdfKey, 86400),
-    getPresignedDownloadUrl(pdfS3Keys.storyPdfKey, 86400),
-    pdfS3Keys.envelopePdfKey ? getPresignedDownloadUrl(pdfS3Keys.envelopePdfKey, 86400) : Promise.resolve(null),
+    getPresignedDownloadUrl(pdfS3Keys.letterKey, 86400),
+    getPresignedDownloadUrl(pdfS3Keys.storyKey, 86400),
+    pdfS3Keys.envelopeKey ? getPresignedDownloadUrl(pdfS3Keys.envelopeKey, 86400) : Promise.resolve(null),
   ]);
 
   const subject = `🎁 ${order.recipientName}'s ${holidayName} Letter Has Arrived!`;

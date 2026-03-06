@@ -1,0 +1,351 @@
+import { prisma } from '@/lib/prisma';
+import { generateContent } from '@/lib/ai';
+import { renderPdfs } from '@/lib/pdf';
+import { sendDeliveryEmail } from '@/lib/email';
+
+/**
+ * Process an order through the state machine
+ * States: pending_claim -> pending_generation -> pending_pdf -> pending_delivery -> delivered
+ */
+export async function processOrder(orderId: string): Promise<void> {
+  console.log(`Starting order processing for ${orderId}`);
+
+  try {
+    // Get the order
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        program: {
+          include: {
+            template: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new Error(`Order ${orderId} not found`);
+    }
+
+    // Validate we're in the right state to process
+    if (order.status !== 'pending_generation') {
+      console.log(`Order ${orderId} is not in pending_generation state (current: ${order.status})`);
+      return;
+    }
+
+    // Step 1: Generate AI content
+    console.log(`Generating AI content for order ${orderId}`);
+
+    try {
+      const content = await generateContent(orderId);
+
+      // Update order with generated content
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          generatedLetter: content.letter,
+          generatedStory: content.story,
+          status: 'pending_pdf',
+        },
+      });
+
+      console.log(`AI content generated successfully for order ${orderId}`);
+    } catch (error) {
+      console.error(`Failed to generate AI content for order ${orderId}:`, error);
+
+      // Update status to failed
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'AI generation failed',
+        },
+      });
+
+      throw error;
+    }
+
+    // Step 2: Generate PDFs
+    console.log(`Generating PDFs for order ${orderId}`);
+
+    try {
+      const pdfKeys = await renderPdfs(orderId);
+
+      // Update order with PDF S3 keys
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          letterPdfKey: pdfKeys.letterKey,
+          storyPdfKey: pdfKeys.storyKey,
+          envelopePdfKey: pdfKeys.envelopeKey,
+          status: 'pending_delivery',
+        },
+      });
+
+      console.log(`PDFs generated successfully for order ${orderId}`);
+    } catch (error) {
+      console.error(`Failed to generate PDFs for order ${orderId}:`, error);
+
+      // Update status to failed
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'PDF generation failed',
+        },
+      });
+
+      throw error;
+    }
+
+    // Step 3: Send delivery email (for digital orders)
+    const updatedOrder = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        program: {
+          include: {
+            template: true,
+          },
+        },
+      },
+    });
+
+    if (!updatedOrder) {
+      throw new Error(`Order ${orderId} not found after PDF generation`);
+    }
+
+    // For digital delivery, send email immediately
+    if (updatedOrder.deliveryType === 'digital') {
+      console.log(`Sending delivery email for order ${orderId}`);
+
+      try {
+        await sendDeliveryEmail(updatedOrder, {
+          letterKey: updatedOrder.letterPdfKey!,
+          storyKey: updatedOrder.storyPdfKey!,
+          envelopeKey: updatedOrder.envelopePdfKey,
+        });
+
+        // Update status to delivered
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            status: 'delivered',
+          },
+        });
+
+        console.log(`Order ${orderId} delivered successfully via email`);
+      } catch (error) {
+        console.error(`Failed to send delivery email for order ${orderId}:`, error);
+
+        // Update status to failed
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Email delivery failed',
+          },
+        });
+
+        throw error;
+      }
+    } else {
+      // For physical delivery, the order stays in pending_delivery
+      // until PostGrid confirms delivery (Step 13)
+      console.log(`Order ${orderId} ready for physical delivery via PostGrid`);
+    }
+
+    console.log(`Order processing completed for ${orderId}`);
+
+  } catch (error) {
+    console.error(`Order processing failed for ${orderId}:`, error);
+
+    // Try to update the order status to failed if we haven't already
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { status: true },
+      });
+
+      if (order && order.status !== 'failed') {
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Processing failed',
+          },
+        });
+      }
+    } catch (updateError) {
+      console.error(`Failed to update order status to failed:`, updateError);
+    }
+
+    // Re-throw the error for the caller to handle
+    throw error;
+  }
+}
+
+/**
+ * Retry failed orders (admin function)
+ */
+export async function retryFailedOrder(orderId: string): Promise<void> {
+  console.log(`Retrying failed order ${orderId}`);
+
+  // Get the order
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+  });
+
+  if (!order) {
+    throw new Error(`Order ${orderId} not found`);
+  }
+
+  if (order.status !== 'failed') {
+    throw new Error(`Order ${orderId} is not in failed state`);
+  }
+
+  // Reset to the appropriate state based on what we have
+  let newStatus = 'pending_generation';
+
+  if (order.generatedLetter && order.generatedStory) {
+    newStatus = 'pending_pdf';
+  }
+
+  if (order.letterPdfKey && order.storyPdfKey && order.envelopePdfKey) {
+    newStatus = 'pending_delivery';
+  }
+
+  // Update status and clear error
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      status: newStatus,
+      errorMessage: null,
+    },
+  });
+
+  // Restart processing
+  if (newStatus === 'pending_generation') {
+    await processOrder(orderId);
+  } else if (newStatus === 'pending_pdf') {
+    // Continue from PDF generation
+    await continueFromPdf(orderId);
+  } else if (newStatus === 'pending_delivery') {
+    // Continue from delivery
+    await continueFromDelivery(orderId);
+  }
+}
+
+/**
+ * Continue processing from PDF generation step
+ */
+async function continueFromPdf(orderId: string): Promise<void> {
+  console.log(`Continuing order processing from PDF generation for ${orderId}`);
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      program: {
+        include: {
+          template: true,
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new Error(`Order ${orderId} not found`);
+  }
+
+  try {
+    // Generate PDFs
+    const pdfKeys = await renderPdfs(orderId);
+
+    // Update order with PDF S3 keys
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        letterPdfKey: pdfKeys.letterKey,
+        storyPdfKey: pdfKeys.storyKey,
+        envelopePdfKey: pdfKeys.envelopeKey,
+        status: 'pending_delivery',
+      },
+    });
+
+    // Continue with delivery
+    await continueFromDelivery(orderId);
+  } catch (error) {
+    console.error(`Failed to generate PDFs for order ${orderId}:`, error);
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'failed',
+        errorMessage: error instanceof Error ? error.message : 'PDF generation failed',
+      },
+    });
+
+    throw error;
+  }
+}
+
+/**
+ * Continue processing from delivery step
+ */
+async function continueFromDelivery(orderId: string): Promise<void> {
+  console.log(`Continuing order processing from delivery for ${orderId}`);
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      program: {
+        include: {
+          template: true,
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new Error(`Order ${orderId} not found`);
+  }
+
+  if (!order.letterPdfKey || !order.storyPdfKey || !order.envelopePdfKey) {
+    throw new Error(`Order ${orderId} missing PDF keys`);
+  }
+
+  // For digital delivery, send email
+  if (order.deliveryType === 'digital') {
+    try {
+      await sendDeliveryEmail(order, {
+        letterKey: order.letterPdfKey,
+        storyKey: order.storyPdfKey,
+        envelopeKey: order.envelopePdfKey,
+      });
+
+      // Update status to delivered
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'delivered',
+        },
+      });
+
+      console.log(`Order ${orderId} delivered successfully via email`);
+    } catch (error) {
+      console.error(`Failed to send delivery email for order ${orderId}:`, error);
+
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Email delivery failed',
+        },
+      });
+
+      throw error;
+    }
+  } else {
+    // For physical delivery, the order stays in pending_delivery
+    console.log(`Order ${orderId} ready for physical delivery via PostGrid`);
+  }
+}

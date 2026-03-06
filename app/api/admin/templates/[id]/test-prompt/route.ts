@@ -23,12 +23,12 @@ const testPromptSchema = z.object({
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // TODO: Add admin authentication check here
 
-    const { id: templateId } = params;
+    const { id: templateId } = await params;
     const body = await request.json();
 
     // Validate request body
