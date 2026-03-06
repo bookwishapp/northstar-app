@@ -25,7 +25,11 @@ export async function renderWithGotenberg(
   html: string,
   options: GotenbergOptions = {}
 ): Promise<Buffer> {
-  const gotenbergUrl = process.env.GOTENBERG_URL || 'http://localhost:3000';
+  const gotenbergUrl = process.env.GOTENBERG_URL;
+
+  if (!gotenbergUrl) {
+    throw new Error('GOTENBERG_URL environment variable is not configured. Please set up the Gotenberg service in Railway.');
+  }
 
   // Default options for letter-sized paper with reasonable margins
   const defaultOptions: GotenbergOptions = {

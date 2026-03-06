@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     console.log('PDF generated successfully, size:', pdfBuffer.length, 'bytes');
 
     // Return the PDF with appropriate headers
-    return new NextResponse(pdfBuffer, {
+    // Convert Buffer to Uint8Array for Next.js 16 compatibility
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
