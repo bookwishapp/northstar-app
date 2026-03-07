@@ -4,7 +4,6 @@ import { authConfig } from './auth.config';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 
 async function getUser(email: string): Promise<any | undefined> {
   try {
@@ -20,7 +19,6 @@ async function getUser(email: string): Promise<any | undefined> {
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
   },
