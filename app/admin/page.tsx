@@ -39,8 +39,8 @@ export default async function AdminDashboard() {
     { label: 'Total Orders', value: stats.totalOrders, href: '/admin/orders' },
     { label: 'Pending Orders', value: stats.pendingOrders, href: '/admin/orders?status=pending' },
     { label: 'Delivered Orders', value: stats.deliveredOrders, href: '/admin/orders?status=delivered' },
-    { label: 'Templates', value: stats.totalTemplates, href: '/admin/templates' },
-    { label: 'Programs', value: stats.totalPrograms, href: '/admin/programs' },
+    { label: 'Templates', value: stats.totalTemplates, href: '/admin/holidays' },
+    { label: 'Programs', value: stats.totalPrograms, href: '/admin/holidays' },
   ];
 
   return (
@@ -73,7 +73,7 @@ export default async function AdminDashboard() {
           <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
             Quick Actions
           </h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Link
               href="/admin/orders/create"
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
@@ -81,22 +81,16 @@ export default async function AdminDashboard() {
               Create Order
             </Link>
             <Link
-              href="/admin/templates/new"
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-            >
-              New Template
-            </Link>
-            <Link
-              href="/admin/programs/new"
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              New Program
-            </Link>
-            <Link
-              href="/admin/holidays/new"
+              href="/admin/holidays/create"
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
             >
               New Holiday
+            </Link>
+            <Link
+              href="/admin/holidays"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+            >
+              Manage Holidays
             </Link>
           </div>
         </div>

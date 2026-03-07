@@ -10,8 +10,6 @@ export default function AdminNav({ userEmail }: { userEmail: string }) {
   const navItems = [
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/orders', label: 'Orders' },
-    { href: '/admin/templates', label: 'Templates' },
-    { href: '/admin/programs', label: 'Programs' },
     { href: '/admin/holidays', label: 'Holidays' },
   ];
 
@@ -46,7 +44,7 @@ export default function AdminNav({ userEmail }: { userEmail: string }) {
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-700">{userEmail}</span>
             <button
-              onClick={() => signOut({ callbackUrl: '/admin/login' })}
+              onClick={() => signOut({ callbackUrl: '/admin-login' })}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
               Sign out
