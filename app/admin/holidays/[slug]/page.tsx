@@ -32,7 +32,7 @@ export default function EditHolidayTemplatePage() {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/admin/templates/${template?.id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

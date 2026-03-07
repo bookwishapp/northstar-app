@@ -5,10 +5,21 @@ import { z } from 'zod';
 // Schema for template update
 const updateTemplateSchema = z.object({
   character: z.string().optional(),
+  characterTone: z.string().optional(),
   location: z.string().optional(),
   letterPrompt: z.string().optional(),
   storyPrompt: z.string().optional(),
   isActive: z.boolean().optional(),
+  primaryColor: z.string().optional(),
+  accentColor: z.string().optional(),
+  paperSize: z.string().optional(),
+  marginTop: z.string().optional(),
+  marginBottom: z.string().optional(),
+  marginLeft: z.string().optional(),
+  marginRight: z.string().optional(),
+  repeatBackground: z.boolean().optional(),
+  headerFirstPageOnly: z.boolean().optional(),
+  waxSealLastPageOnly: z.boolean().optional(),
 });
 
 /**

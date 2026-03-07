@@ -18,9 +18,9 @@ async function getPrograms(holidaySlug: string) {
 export default async function HolidayProgramsPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const holidaySlug = params.slug;
+  const { slug: holidaySlug } = await params;
   const programs = await getPrograms(holidaySlug);
 
   return (
@@ -28,7 +28,7 @@ export default async function HolidayProgramsPage({
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-xl font-semibold text-gray-900 capitalize">
-            {holidaySlug.replace(/_/g, ' ')} Programs
+            {holidaySlug?.replace(/_/g, ' ') || ''} Programs
           </h1>
           <p className="mt-2 text-sm text-gray-700">
             Manage programs and pricing for this holiday
