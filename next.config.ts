@@ -1,9 +1,8 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  // CRITICAL: Must be 'standalone' for Railway deployment
-  // This ensures Next.js runs as a Node.js server, not serverless
-  output: 'standalone',
+  // Remove standalone - it's incompatible with next start
+  // output: 'standalone',
 
   // Enable experimental features if needed
   experimental: {
