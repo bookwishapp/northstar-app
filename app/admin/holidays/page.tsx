@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import Link from 'next/link';
 
 async function getHolidayStats() {
   const templates = await prisma.template.findMany({
@@ -47,6 +48,14 @@ export default async function HolidaysPage() {
             Overview of all holiday campaigns
           </p>
         </div>
+        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+          <Link
+            href="/admin/holidays/create"
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          >
+            Add Holiday
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -89,6 +98,21 @@ export default async function HolidaysPage() {
                     </span>
                   ))}
                 </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
+                <Link
+                  href={`/admin/holidays/${holiday.slug}`}
+                  className="flex-1 text-center text-sm font-medium text-red-600 hover:text-red-700 py-2 border border-red-200 rounded hover:bg-red-50"
+                >
+                  Edit Template
+                </Link>
+                <Link
+                  href={`/admin/holidays/${holiday.slug}/programs`}
+                  className="flex-1 text-center text-sm font-medium text-purple-600 hover:text-purple-700 py-2 border border-purple-200 rounded hover:bg-purple-50"
+                >
+                  Manage Programs
+                </Link>
               </div>
             </div>
           </div>
