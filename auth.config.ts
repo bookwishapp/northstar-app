@@ -2,13 +2,13 @@ import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
   pages: {
-    signIn: '/admin/login',
+    signIn: '/admin-login',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnAdmin = nextUrl.pathname.startsWith('/admin');
-      const isLoginPage = nextUrl.pathname === '/admin/login';
+      const isLoginPage = nextUrl.pathname === '/admin-login';
 
       // Allow access to login page always
       if (isLoginPage) {
