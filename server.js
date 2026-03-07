@@ -1,14 +1,33 @@
-const { execSync } = require('child_process');
+#!/usr/bin/env node
 
-// Run migrations
+const { spawn } = require('child_process');
+
+// Run migrations first
 console.log('Running database migrations...');
-execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+const migrate = spawn('npx', ['prisma', 'migrate', 'deploy'], {
+  stdio: 'inherit',
+  env: { ...process.env }
+});
 
-// Force the standalone server to use port 3000
-process.env.PORT = '3000';
-process.env.HOSTNAME = '0.0.0.0';
+migrate.on('close', (code) => {
+  if (code !== 0) {
+    console.error('Migration failed with code', code);
+  }
 
-console.log('Starting server on port 3000...');
+  // Set port to 3000 - Railway expects this
+  process.env.PORT = '3000';
+  process.env.HOSTNAME = '0.0.0.0';
 
-// Start the standalone server
-require('./.next/standalone/server.js');
+  console.log('Starting server on port 3000...');
+
+  // Start Next.js using next start which works with standalone
+  const server = spawn('npx', ['next', 'start', '-p', '3000', '-H', '0.0.0.0'], {
+    stdio: 'inherit',
+    env: { ...process.env }
+  });
+
+  server.on('error', (err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+});
