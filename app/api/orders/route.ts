@@ -5,8 +5,7 @@ import { z } from 'zod';
 
 // Schema for order creation
 const createOrderSchema = z.object({
-  externalOrderId: z.string(),
-  holidaySlug: z.string(),
+  externalOrderId: z.string().optional(),
   programId: z.string(),
   deliveryType: z.enum(['digital', 'physical']),
   customerEmail: z.string().email(),
@@ -60,8 +59,8 @@ export async function POST(request: NextRequest) {
     const order = await prisma.order.create({
       data: {
         source: 'etsy',
-        externalOrderId: validatedData.externalOrderId,
-        holidaySlug: validatedData.holidaySlug,
+        externalOrderId: validatedData.externalOrderId || null,
+        holidaySlug: program.holidaySlug,
         programId: validatedData.programId,
         deliveryType: validatedData.deliveryType,
         customerEmail: validatedData.customerEmail,
