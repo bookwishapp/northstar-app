@@ -29,7 +29,7 @@ export default async function OrderDetailsPage({
   const { id } = await params;
   const order = await getOrder(id);
 
-  const claimUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/claim/${order.claimToken}`;
+  const claimUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/claim/${order.claimToken}`;
 
   return (
     <div className="px-4 py-6 sm:px-0">

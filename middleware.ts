@@ -7,12 +7,13 @@ import { authConfig } from './auth.config';
 const authMiddleware = NextAuth(authConfig).auth;
 
 export default async function middleware(request: NextRequest) {
-  // First, handle domain redirects (www vs non-www)
+  // First, handle domain redirects (www vs non-www) if configured
   const hostname = request.headers.get('host') || '';
-  const PRIMARY_DOMAIN = process.env.PRIMARY_DOMAIN || 'www.northstarpostal.com';
+  const PRIMARY_DOMAIN = process.env.PRIMARY_DOMAIN;
 
-  // Skip redirect for localhost and Railway default domains
-  if (!hostname.includes('localhost') &&
+  // Only handle redirects if PRIMARY_DOMAIN is configured
+  if (PRIMARY_DOMAIN &&
+      !hostname.includes('localhost') &&
       !hostname.includes('railway.app') &&
       !hostname.includes('127.0.0.1')) {
 

@@ -2,17 +2,25 @@ import { SESClient, SendEmailCommand, SendRawEmailCommand } from '@aws-sdk/clien
 import { getPresignedDownloadUrl } from '@/lib/s3';
 import { prisma } from '@/lib/prisma';
 
-// Initialize SES client
+// Initialize SES client - using Railway environment variables
+if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
+  throw new Error('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION in Railway.');
+}
+
+if (!process.env.FROM_EMAIL) {
+  throw new Error('FROM_EMAIL not configured. Please set FROM_EMAIL in Railway.');
+}
+
 const ses = new SESClient({
-  region: process.env.AWS_REGION || 'us-east-2',
+  region: process.env.AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 });
 
-const FROM_EMAIL = 'hello@northstarpostal.com';
-const FROM_NAME = 'North Star Postal';
+const FROM_EMAIL = process.env.FROM_EMAIL;
+const FROM_NAME = process.env.FROM_NAME || 'North Star Postal';
 
 interface PdfKeys {
   letterKey: string;
@@ -240,10 +248,32 @@ Questions? Reply to this email and we'll help right away!
   });
 
   try {
-    await ses.send(command);
-    console.log(`Claim email sent to ${order.customerEmail} for order ${order.id}`);
+    console.log(`Attempting to send claim email from ${FROM_EMAIL} to ${order.customerEmail}`);
+    const result = await ses.send(command);
+    console.log(`Claim email sent successfully to ${order.customerEmail} for order ${order.id}`);
+    console.log(`SES MessageId: ${result.MessageId}`);
+    return;
   } catch (error) {
     console.error('Failed to send claim email:', error);
+    console.error('SES Configuration:', {
+      region: process.env.AWS_REGION,
+      fromEmail: FROM_EMAIL,
+      toEmail: order.customerEmail,
+      hasAccessKeyId: !!process.env.AWS_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+    });
+
+    // Check for common SES errors
+    if (error instanceof Error) {
+      if (error.message.includes('MessageRejected')) {
+        console.error('Email address may not be verified in AWS SES');
+      } else if (error.message.includes('AccessDenied')) {
+        console.error('AWS credentials may be incorrect or lack SES permissions');
+      } else if (error.message.includes('Email address is not verified')) {
+        console.error('Sender email address is not verified in AWS SES. Verify:', FROM_EMAIL);
+      }
+    }
+
     throw new Error(`Failed to send claim email: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

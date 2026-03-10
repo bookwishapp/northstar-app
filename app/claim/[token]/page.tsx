@@ -6,8 +6,15 @@ interface Props {
 }
 
 async function getOrderData(token: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
+
+  if (!baseUrl) {
+    throw new Error('NEXT_PUBLIC_BASE_URL not configured');
+  }
+
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/claim/${token}`,
+    `${baseUrl}/api/claim/${token}`,
     { cache: 'no-store' }
   );
 

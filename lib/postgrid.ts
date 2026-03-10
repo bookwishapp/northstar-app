@@ -1,17 +1,23 @@
 import { Order } from '@prisma/client';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
-const POSTGRID_API_KEY = process.env.POSTGRID_API_KEY!;
+// PostGrid is optional - only validate if we're actually using it
+const POSTGRID_API_KEY = process.env.POSTGRID_API_KEY;
 const POSTGRID_API_URL = 'https://api.postgrid.com/v1';
 
-// Initialize S3 client
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
+// Only initialize S3 client if AWS credentials are configured
+// S3 is required for fetching PDFs to send via PostGrid
+let s3Client: S3Client | null = null;
+
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION) {
+  s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+  });
+}
 
 interface PostGridLetterRequest {
   to: {
@@ -54,6 +60,16 @@ interface PostGridResponse {
 }
 
 export async function sendPhysicalLetter(order: Order): Promise<PostGridResponse> {
+  // Check if PostGrid is configured
+  if (!POSTGRID_API_KEY) {
+    throw new Error('PostGrid API key not configured. Physical mail delivery is not available.');
+  }
+
+  // Check if S3 is configured (needed to fetch PDFs)
+  if (!s3Client || !process.env.AWS_S3_BUCKET) {
+    throw new Error('AWS S3 not configured. Cannot fetch letter PDF for physical delivery.');
+  }
+
   if (!order.deliveryAddress) {
     throw new Error('No delivery address provided for physical order');
   }
@@ -64,7 +80,7 @@ export async function sendPhysicalLetter(order: Order): Promise<PostGridResponse
 
   // Fetch letter PDF from S3
   const getObjectCommand = new GetObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET!,
+    Bucket: process.env.AWS_S3_BUCKET,
     Key: order.letterPdfKey,
   });
 
@@ -148,6 +164,10 @@ export async function sendPhysicalLetter(order: Order): Promise<PostGridResponse
 }
 
 export async function getLetterStatus(postgridId: string): Promise<PostGridResponse> {
+  if (!POSTGRID_API_KEY) {
+    throw new Error('PostGrid API key not configured. Cannot check letter status.');
+  }
+
   const response = await fetch(`${POSTGRID_API_URL}/letters/${postgridId}`, {
     method: 'GET',
     headers: {
