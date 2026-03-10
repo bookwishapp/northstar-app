@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
+import { processPromptTemplate, buildPromptContext } from '@/lib/prompt-template';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -15,37 +16,6 @@ interface RecipientDetails {
 interface GeneratedContent {
   letter: string;
   story: string;
-}
-
-/**
- * Build context about the recipient for AI generation
- */
-function buildRecipientContext(
-  recipientName: string,
-  recipientAge?: number | null,
-  recipientDetails?: any
-): string {
-  const parts = [`Child's name: ${recipientName}`];
-
-  if (recipientAge) {
-    parts.push(`Age: ${recipientAge} years old`);
-  }
-
-  if (recipientDetails && typeof recipientDetails === 'object') {
-    // Add holiday-specific details
-    Object.entries(recipientDetails).forEach(([key, value]) => {
-      if (value) {
-        // Convert camelCase to readable format
-        const label = key
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, (str) => str.toUpperCase())
-          .trim();
-        parts.push(`${label}: ${value}`);
-      }
-    });
-  }
-
-  return parts.join('\n');
 }
 
 /**
@@ -87,14 +57,18 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
     throw new Error(`Order ${orderId} missing recipient name`);
   }
 
-  // Build context about the child
-  const recipientContext = buildRecipientContext(
+  // Build context object for Handlebars processing
+  const context = buildPromptContext(
     recipientName,
     recipientAge,
     recipientDetails
   );
 
-  console.log('Recipient context:', recipientContext);
+  console.log('Recipient context:', JSON.stringify(context, null, 2));
+
+  // Process Handlebars templates
+  const processedLetterPrompt = processPromptTemplate(template.letterPrompt, context);
+  const processedStoryPrompt = processPromptTemplate(template.storyPrompt, context);
 
   try {
     // Generate letter and story in parallel
@@ -104,11 +78,11 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
         messages: [
           {
             role: 'system',
-            content: template.letterPrompt,
+            content: processedLetterPrompt,
           },
           {
             role: 'user',
-            content: recipientContext,
+            content: `Generate a personalized letter for ${recipientName}.`,
           },
         ],
         temperature: 0.9,
@@ -119,11 +93,11 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
         messages: [
           {
             role: 'system',
-            content: template.storyPrompt,
+            content: processedStoryPrompt,
           },
           {
             role: 'user',
-            content: recipientContext,
+            content: `Generate a personalized story featuring ${recipientName}.`,
           },
         ],
         temperature: 0.9,

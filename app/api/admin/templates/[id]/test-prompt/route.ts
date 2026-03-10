@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import OpenAI from 'openai';
 import { z } from 'zod';
+import { processPromptTemplate, buildPromptContext } from '@/lib/prompt-template';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -46,17 +47,20 @@ export async function POST(
       );
     }
 
-    // Build recipient context
-    const recipientContext = buildTestContext(
+    // Build context object for Handlebars processing
+    const context = buildPromptContext(
       validatedData.recipientName,
       validatedData.recipientAge,
       validatedData.details
     );
 
-    // Select prompt based on type
-    const systemPrompt = validatedData.promptType === 'letter'
+    // Select prompt template based on type
+    const promptTemplate = validatedData.promptType === 'letter'
       ? template.letterPrompt
       : template.storyPrompt;
+
+    // Process the Handlebars template with the context
+    const processedPrompt = processPromptTemplate(promptTemplate, context);
 
     // Generate test content
     console.log(`Testing ${validatedData.promptType} prompt for template ${templateId}`);
@@ -66,11 +70,11 @@ export async function POST(
       messages: [
         {
           role: 'system',
-          content: systemPrompt,
+          content: processedPrompt,
         },
         {
           role: 'user',
-          content: recipientContext,
+          content: `Generate a ${validatedData.promptType} for ${validatedData.recipientName}.`,
         },
       ],
       temperature: 0.9,
@@ -106,30 +110,3 @@ export async function POST(
   }
 }
 
-/**
- * Build context for test generation
- */
-function buildTestContext(
-  recipientName: string,
-  recipientAge: number,
-  details?: Record<string, any>
-): string {
-  const parts = [
-    `Child's name: ${recipientName}`,
-    `Age: ${recipientAge} years old`,
-  ];
-
-  if (details) {
-    Object.entries(details).forEach(([key, value]) => {
-      if (value) {
-        const label = key
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, (str) => str.toUpperCase())
-          .trim();
-        parts.push(`${label}: ${value}`);
-      }
-    });
-  }
-
-  return parts.join('\n');
-}

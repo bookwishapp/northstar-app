@@ -166,15 +166,19 @@ export default function TestPromptModal({
                               id="details"
                               value={details}
                               onChange={(e) => setDetails(e.target.value)}
-                              rows={4}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                              placeholder="Enter details, one per line:
-Favorite color: Blue
-Pet: Dog named Max
-Hobbies: Drawing, soccer"
+                              rows={6}
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm font-mono text-xs"
+                              placeholder="recipientPronouns: they/them
+recipientTown: Seattle
+recipientRelationship: grandchild
+goodDeeds: helped younger sister with homework, cleaned room without being asked
+encouragementTopic: learning to ride a bike
+favoriteThings: dinosaurs, LEGOs, swimming
+specialAchievements: learned to read chapter books"
                             />
                             <p className="mt-1 text-xs text-gray-500">
-                              Enter personalization details as key: value pairs, one per line
+                              Enter as key: value pairs. Common fields: recipientPronouns, recipientTown,
+                              recipientRelationship, goodDeeds, encouragementTopic, favoriteThings, elfNotes
                             </p>
                           </div>
 
