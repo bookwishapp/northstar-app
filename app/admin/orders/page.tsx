@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import OrderStatusFilter from '@/components/admin/OrderStatusFilter';
 
 interface SearchParams {
   status?: string;
@@ -48,9 +49,10 @@ async function getOrders(searchParams: SearchParams) {
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
-  const { orders, total, page, totalPages } = await getOrders(searchParams);
+  const params = await searchParams;
+  const { orders, total, page, totalPages } = await getOrders(params);
 
   const statuses = [
     { value: '', label: 'All Orders' },
@@ -84,21 +86,7 @@ export default async function OrdersPage({
 
       {/* Filters */}
       <div className="mt-6">
-        <select
-          value={searchParams.status || ''}
-          onChange={(e) => {
-            const params = new URLSearchParams();
-            if (e.target.value) params.set('status', e.target.value);
-            window.location.href = `/admin/orders${params.toString() ? '?' + params.toString() : ''}`;
-          }}
-          className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-        >
-          {statuses.map((status) => (
-            <option key={status.value} value={status.value}>
-              {status.label}
-            </option>
-          ))}
-        </select>
+        <OrderStatusFilter currentStatus={params.status} />
       </div>
 
       {/* Orders Table */}
@@ -153,10 +141,10 @@ export default async function OrdersPage({
                         {order.recipientName || '-'}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {order.program.template.character}
+                        {order.program?.template?.character || order.holidaySlug || '-'}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {order.program.tier}
+                        {order.program?.tier || '-'}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -195,7 +183,7 @@ export default async function OrdersPage({
           <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
             {page > 1 && (
               <Link
-                href={`/admin/orders?page=${page - 1}${searchParams.status ? `&status=${searchParams.status}` : ''}`}
+                href={`/admin/orders?page=${page - 1}${params.status ? `&status=${params.status}` : ''}`}
                 className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
               >
                 Previous
@@ -204,7 +192,7 @@ export default async function OrdersPage({
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
               <Link
                 key={p}
-                href={`/admin/orders?page=${p}${searchParams.status ? `&status=${searchParams.status}` : ''}`}
+                href={`/admin/orders?page=${p}${params.status ? `&status=${params.status}` : ''}`}
                 className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                   p === page
                     ? 'z-10 bg-red-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600'
@@ -216,7 +204,7 @@ export default async function OrdersPage({
             ))}
             {page < totalPages && (
               <Link
-                href={`/admin/orders?page=${page + 1}${searchParams.status ? `&status=${searchParams.status}` : ''}`}
+                href={`/admin/orders?page=${page + 1}${params.status ? `&status=${params.status}` : ''}`}
                 className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
               >
                 Next
