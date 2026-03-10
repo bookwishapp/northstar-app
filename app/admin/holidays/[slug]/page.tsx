@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import TestPromptModal from '@/components/admin/TestPromptModal';
 
 export default function EditHolidayTemplatePage() {
   const params = useParams();
@@ -10,6 +11,10 @@ export default function EditHolidayTemplatePage() {
   const [activeTab, setActiveTab] = useState('graphics');
   const [template, setTemplate] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Test prompt modal state
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [testPromptType, setTestPromptType] = useState<'letter' | 'story'>('letter');
 
   useEffect(() => {
     // Fetch template data for this holiday
@@ -306,7 +311,10 @@ export default function EditHolidayTemplatePage() {
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">Letter Prompt</label>
                 <button
-                  onClick={() => {/* TODO: Implement test prompt modal */}}
+                  onClick={() => {
+                    setTestPromptType('letter');
+                    setIsTestModalOpen(true);
+                  }}
                   className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   Test Prompt
@@ -328,7 +336,10 @@ export default function EditHolidayTemplatePage() {
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">Story Prompt</label>
                 <button
-                  onClick={() => {/* TODO: Implement test prompt modal */}}
+                  onClick={() => {
+                    setTestPromptType('story');
+                    setIsTestModalOpen(true);
+                  }}
                   className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   Test Prompt
@@ -347,6 +358,17 @@ export default function EditHolidayTemplatePage() {
           </div>
         )}
       </div>
+
+      {/* Test Prompt Modal */}
+      {template && (
+        <TestPromptModal
+          isOpen={isTestModalOpen}
+          onClose={() => setIsTestModalOpen(false)}
+          templateId={template.id}
+          promptType={testPromptType}
+          character={template.character || holidaySlug}
+        />
+      )}
     </div>
   );
 }
