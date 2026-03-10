@@ -112,6 +112,9 @@ model Template {
   letterPrompt    String    // Full system prompt for letter generation
   storyPrompt     String    // Full system prompt for story generation
 
+  // Personalization fields configuration
+  personalizationFields Json?     // Array of field configs for claim form
+
   programs        Program[]
 }
 

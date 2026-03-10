@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { claimFields, getHolidayDisplayName, Field } from '@/lib/claim-fields';
+import { getHolidayDisplayName } from '@/lib/claim-fields';
+import type { PersonalizationField } from '@/lib/handlebars-utils';
 
 interface Props {
   token: string;
@@ -15,6 +16,7 @@ interface Props {
   template: {
     character: string;
     holidaySlug: string;
+    personalizationFields?: PersonalizationField[];
   };
   program: {
     name: string;
@@ -44,7 +46,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
   });
 
   const holidayName = getHolidayDisplayName(order.holidaySlug);
-  const fields = claimFields[order.holidaySlug] || [];
+  const fields = template.personalizationFields || [];
   const isPhysical = order.deliveryType === 'physical';
 
   async function handleSubmit(e: React.FormEvent) {
@@ -78,7 +80,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
     }
   }
 
-  function renderField(field: Field) {
+  function renderField(field: PersonalizationField) {
     const value = formData.recipientDetails[field.key] || '';
 
     if (field.type === 'select') {

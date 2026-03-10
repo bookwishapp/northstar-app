@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import TestPromptModal from '@/components/admin/TestPromptModal';
+import {
+  extractTemplateVariables,
+  generateFieldConfig,
+  type PersonalizationField
+} from '@/lib/handlebars-utils';
 
 export default function EditHolidayTemplatePage() {
   const params = useParams();
@@ -11,6 +16,7 @@ export default function EditHolidayTemplatePage() {
   const [activeTab, setActiveTab] = useState('graphics');
   const [template, setTemplate] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [extractedVariables, setExtractedVariables] = useState<string[]>([]);
 
   // Test prompt modal state
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -20,6 +26,17 @@ export default function EditHolidayTemplatePage() {
     // Fetch template data for this holiday
     fetchTemplate();
   }, [holidaySlug]);
+
+  useEffect(() => {
+    // Extract variables from prompts when template changes
+    if (template) {
+      const vars = extractTemplateVariables({
+        letterPrompt: template.letterPrompt,
+        storyPrompt: template.storyPrompt
+      });
+      setExtractedVariables(vars);
+    }
+  }, [template?.letterPrompt, template?.storyPrompt]);
 
   async function fetchTemplate() {
     try {
@@ -129,6 +146,16 @@ export default function EditHolidayTemplatePage() {
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               AI Prompts
+            </button>
+            <button
+              onClick={() => setActiveTab('personalization')}
+              className={`${
+                activeTab === 'personalization'
+                  ? 'border-red-500 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Personalization Fields
             </button>
           </nav>
         </div>
@@ -353,6 +380,201 @@ export default function EditHolidayTemplatePage() {
               />
               <div className="mt-1 text-xs text-gray-500">
                 {(template.storyPrompt || '').length} characters
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Personalization Tab */}
+        {activeTab === 'personalization' && (
+          <div className="space-y-8">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <h3 className="text-sm font-medium text-yellow-800 mb-2">
+                Handlebars Variables in Your Prompts
+              </h3>
+              <p className="text-xs text-yellow-700 mb-3">
+                These variables are detected from your letter and story prompts. Configure how each field appears in the claim form.
+              </p>
+              {extractedVariables.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {extractedVariables.map((variable) => (
+                    <code key={variable} className="bg-yellow-100 px-2 py-1 rounded text-xs">
+                      {`{{${variable}}}`}
+                    </code>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-yellow-600 italic">
+                  No variables found. Add Handlebars variables like {`{{childName}}`} to your prompts.
+                </p>
+              )}
+            </div>
+
+            {/* Field Configuration */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Configure Personalization Fields</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Configure how each field appears in the claim form. The field key must match the Handlebars variable name exactly.
+              </p>
+
+              <div className="space-y-6">
+                {/* Existing Fields */}
+                {(template.personalizationFields || []).map((field: PersonalizationField, index: number) => (
+                  <div key={field.key} className="bg-white p-4 border rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Variable Name (must match Handlebars)
+                        </label>
+                        <input
+                          type="text"
+                          value={field.key}
+                          onChange={(e) => {
+                            const fields = [...(template.personalizationFields || [])];
+                            fields[index] = { ...fields[index], key: e.target.value };
+                            setTemplate({ ...template, personalizationFields: fields });
+                          }}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                          placeholder="e.g., favoriteActivities"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Display Label</label>
+                        <input
+                          type="text"
+                          value={field.label}
+                          onChange={(e) => {
+                            const fields = [...(template.personalizationFields || [])];
+                            fields[index] = { ...fields[index], label: e.target.value };
+                            setTemplate({ ...template, personalizationFields: fields });
+                          }}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                          placeholder="e.g., Favorite Activities"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Field Type</label>
+                        <select
+                          value={field.type}
+                          onChange={(e) => {
+                            const fields = [...(template.personalizationFields || [])];
+                            fields[index] = { ...fields[index], type: e.target.value as any };
+                            setTemplate({ ...template, personalizationFields: fields });
+                          }}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                        >
+                          <option value="text">Text</option>
+                          <option value="textarea">Textarea</option>
+                          <option value="number">Number</option>
+                          <option value="select">Select/Dropdown</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Placeholder</label>
+                        <input
+                          type="text"
+                          value={field.placeholder || ''}
+                          onChange={(e) => {
+                            const fields = [...(template.personalizationFields || [])];
+                            fields[index] = { ...fields[index], placeholder: e.target.value };
+                            setTemplate({ ...template, personalizationFields: fields });
+                          }}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                          placeholder="Helpful hint for users..."
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={field.required}
+                          onChange={(e) => {
+                            const fields = [...(template.personalizationFields || [])];
+                            fields[index] = { ...fields[index], required: e.target.checked };
+                            setTemplate({ ...template, personalizationFields: fields });
+                          }}
+                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                        />
+                        <label className="ml-2 block text-sm text-gray-900">Required Field</label>
+                      </div>
+
+                      <div className="flex items-center justify-end">
+                        <button
+                          onClick={() => {
+                            const fields = [...(template.personalizationFields || [])];
+                            fields.splice(index, 1);
+                            setTemplate({ ...template, personalizationFields: fields });
+                          }}
+                          className="text-red-600 hover:text-red-700 text-sm"
+                        >
+                          Remove Field
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Options for select type */}
+                    {field.type === 'select' && (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Options (one per line)
+                        </label>
+                        <textarea
+                          value={(field.options || []).join('\n')}
+                          onChange={(e) => {
+                            const fields = [...(template.personalizationFields || [])];
+                            fields[index] = {
+                              ...fields[index],
+                              options: e.target.value.split('\n').filter(o => o.trim())
+                            };
+                            setTemplate({ ...template, personalizationFields: fields });
+                          }}
+                          rows={3}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                          placeholder="Very good&#10;Mostly good&#10;Trying their best"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Add Field Button */}
+                <button
+                  onClick={() => {
+                    const newField: PersonalizationField = {
+                      key: '',
+                      label: '',
+                      type: 'text',
+                      placeholder: '',
+                      required: true
+                    };
+                    const fields = [...(template.personalizationFields || []), newField];
+                    setTemplate({ ...template, personalizationFields: fields });
+                  }}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Add Field
+                </button>
+
+                {/* Auto-generate from variables */}
+                {extractedVariables.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const existingKeys = new Set((template.personalizationFields || []).map((f: PersonalizationField) => f.key));
+                      const newFields = extractedVariables
+                        .filter(v => !existingKeys.has(v))
+                        .map(v => generateFieldConfig(v));
+
+                      const fields = [...(template.personalizationFields || []), ...newFields];
+                      setTemplate({ ...template, personalizationFields: fields });
+                    }}
+                    className="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ml-2"
+                  >
+                    Auto-Generate Missing Fields
+                  </button>
+                )}
               </div>
             </div>
           </div>

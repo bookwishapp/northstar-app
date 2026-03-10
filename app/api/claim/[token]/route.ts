@@ -51,6 +51,7 @@ export async function GET(
       template: {
         character: order.program.template.character,
         holidaySlug: order.program.template.holidaySlug,
+        personalizationFields: order.program.template.personalizationFields,
       },
       program: {
         name: order.program.name,
