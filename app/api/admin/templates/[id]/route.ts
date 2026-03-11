@@ -4,40 +4,40 @@ import { z } from 'zod';
 
 // Schema for template update
 const updateTemplateSchema = z.object({
-  character: z.string().optional(),
-  characterTone: z.string().optional(),
-  location: z.string().optional(),
-  letterPrompt: z.string().optional(),
-  storyPrompt: z.string().optional(),
-  isActive: z.boolean().optional(),
-  primaryColor: z.string().optional(),
-  accentColor: z.string().optional(),
-  paperSize: z.string().optional(),
-  marginTop: z.string().optional(),
-  marginBottom: z.string().optional(),
-  marginLeft: z.string().optional(),
-  marginRight: z.string().optional(),
-  repeatBackground: z.boolean().optional(),
-  headerFirstPageOnly: z.boolean().optional(),
-  waxSealLastPageOnly: z.boolean().optional(),
-  letterDateFormat: z.string().optional(),
-  letterDateCustom: z.string().optional(),
+  character: z.string().nullable().optional(),
+  characterTone: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  letterPrompt: z.string().nullable().optional(),
+  storyPrompt: z.string().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
+  primaryColor: z.string().nullable().optional(),
+  accentColor: z.string().nullable().optional(),
+  paperSize: z.string().nullable().optional(),
+  marginTop: z.string().nullable().optional(),
+  marginBottom: z.string().nullable().optional(),
+  marginLeft: z.string().nullable().optional(),
+  marginRight: z.string().nullable().optional(),
+  repeatBackground: z.boolean().nullable().optional(),
+  headerFirstPageOnly: z.boolean().nullable().optional(),
+  waxSealLastPageOnly: z.boolean().nullable().optional(),
+  letterDateFormat: z.string().nullable().optional(),
+  letterDateCustom: z.string().nullable().optional(),
   // New fields from migration
-  fontSize: z.string().optional(),
-  returnAddress: z.string().optional(),
-  envelopeBackgroundKey: z.string().optional(),
-  emailHeaderKey: z.string().optional(),
+  fontSize: z.string().nullable().optional(),
+  returnAddress: z.string().nullable().optional(),
+  envelopeBackgroundKey: z.string().nullable().optional(),
+  emailHeaderKey: z.string().nullable().optional(),
   // S3 asset keys (managed by upload endpoint but may be in template object)
-  backgroundKey: z.string().optional(),
-  headerKey: z.string().optional(),
-  characterKey: z.string().optional(),
-  waxSealKey: z.string().optional(),
-  signatureKey: z.string().optional(),
+  backgroundKey: z.string().nullable().optional(),
+  headerKey: z.string().nullable().optional(),
+  characterKey: z.string().nullable().optional(),
+  waxSealKey: z.string().nullable().optional(),
+  signatureKey: z.string().nullable().optional(),
   // Personalization configuration
-  personalizationFields: z.any().optional(),
+  personalizationFields: z.any().nullable().optional(),
   // Typography
-  fontFamily: z.string().optional(),
-  fontUrl: z.string().optional(),
+  fontFamily: z.string().nullable().optional(),
+  fontUrl: z.string().nullable().optional(),
 }).passthrough(); // Allow additional fields that may exist on template
 
 /**
@@ -58,10 +58,15 @@ export async function PATCH(
     // Validate request body
     const validatedData = updateTemplateSchema.parse(body);
 
+    // Remove null values before passing to Prisma
+    const cleanedData = Object.fromEntries(
+      Object.entries(validatedData).filter(([_, value]) => value !== null)
+    );
+
     // Update template
     const template = await prisma.template.update({
       where: { id: templateId },
-      data: validatedData,
+      data: cleanedData,
     });
 
     return NextResponse.json({
