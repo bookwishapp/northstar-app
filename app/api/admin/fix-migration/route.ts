@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
+    // Lazy load prisma only when the endpoint is called
+    const { prisma } = await import('@/lib/prisma');
+
     // First, check what's in the migrations table
     const migrations = await prisma.$queryRaw`
       SELECT * FROM _prisma_migrations
