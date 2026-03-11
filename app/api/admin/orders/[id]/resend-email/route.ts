@@ -3,11 +3,11 @@ import { sendClaimEmail } from '@/lib/email';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { prisma } = await import('@/lib/prisma');
-    const orderId = params.id;
+    const { id: orderId } = await params;
 
     // Get the order
     const order = await prisma.order.findUnique({
