@@ -1,25 +1,33 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-// Validate required environment variables
-if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
-  throw new Error('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION in Railway.');
+// Lazy initialization of S3 client
+let s3Client: S3Client | null = null;
+
+function getS3Client(): S3Client {
+  if (!s3Client) {
+    // Validate required environment variables only when actually needed
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
+      throw new Error('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION in Railway.');
+    }
+
+    s3Client = new S3Client({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return s3Client;
 }
 
-if (!process.env.AWS_S3_BUCKET) {
-  throw new Error('AWS_S3_BUCKET not configured. Please set AWS_S3_BUCKET in Railway.');
+function getBucketName(): string {
+  if (!process.env.AWS_S3_BUCKET) {
+    throw new Error('AWS_S3_BUCKET not configured. Please set AWS_S3_BUCKET in Railway.');
+  }
+  return process.env.AWS_S3_BUCKET;
 }
-
-// Initialize S3 client
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-const BUCKET_NAME = process.env.AWS_S3_BUCKET;
 
 /**
  * Upload a file to S3
@@ -34,13 +42,13 @@ export async function uploadToS3(
   contentType: string = 'application/octet-stream'
 ): Promise<string> {
   const command = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
+    Bucket: getBucketName(),
     Key: key,
     Body: buffer,
     ContentType: contentType,
   });
 
-  await s3Client.send(command);
+  await getS3Client().send(command);
   return key;
 }
 
@@ -55,11 +63,11 @@ export async function getPresignedDownloadUrl(
   expiresIn: number = 86400 // 24 hours
 ): Promise<string> {
   const command = new GetObjectCommand({
-    Bucket: BUCKET_NAME,
+    Bucket: getBucketName(),
     Key: key,
   });
 
-  return getSignedUrl(s3Client, command, { expiresIn });
+  return getSignedUrl(getS3Client(), command, { expiresIn });
 }
 
 /**
@@ -69,11 +77,11 @@ export async function getPresignedDownloadUrl(
  */
 export async function downloadFromS3(key: string): Promise<Buffer> {
   const command = new GetObjectCommand({
-    Bucket: BUCKET_NAME,
+    Bucket: getBucketName(),
     Key: key,
   });
 
-  const response = await s3Client.send(command);
+  const response = await getS3Client().send(command);
 
   if (!response.Body) {
     throw new Error(`No content found for S3 key: ${key}`);

@@ -1,26 +1,37 @@
 import { SESClient, SendEmailCommand, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import { getPresignedDownloadUrl } from '@/lib/s3';
-import { prisma } from '@/lib/prisma';
 
-// Initialize SES client - using Railway environment variables
-if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
-  throw new Error('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION in Railway.');
+// Lazy initialization of SES client
+let sesClient: SESClient | null = null;
+
+function getSESClient(): SESClient {
+  if (!sesClient) {
+    // Validate required environment variables only when actually needed
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
+      throw new Error('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION in Railway.');
+    }
+
+    sesClient = new SESClient({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return sesClient;
 }
 
-if (!process.env.FROM_EMAIL) {
-  throw new Error('FROM_EMAIL not configured. Please set FROM_EMAIL in Railway.');
+function getFromEmail(): string {
+  if (!process.env.FROM_EMAIL) {
+    throw new Error('FROM_EMAIL not configured. Please set FROM_EMAIL in Railway.');
+  }
+  return process.env.FROM_EMAIL;
 }
 
-const ses = new SESClient({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-const FROM_EMAIL = process.env.FROM_EMAIL;
-const FROM_NAME = process.env.FROM_NAME || 'North Star Postal';
+function getFromName(): string {
+  return process.env.FROM_NAME || 'North Star Postal';
+}
 
 interface PdfKeys {
   letterKey: string;
@@ -39,6 +50,7 @@ export async function sendClaimEmail(order: any): Promise<void> {
   const claimUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/claim/${order.claimToken}`;
 
   // Get the template character for personalization
+  const { prisma } = await import('@/lib/prisma');
   const fullOrder = await prisma.order.findUnique({
     where: { id: order.id },
     include: {
@@ -225,7 +237,7 @@ Questions? Reply to this email and we'll help right away!
   `;
 
   const command = new SendEmailCommand({
-    Source: `${FROM_NAME} <${FROM_EMAIL}>`,
+    Source: `${getFromName()} <${getFromEmail()}>`,
     Destination: {
       ToAddresses: [order.customerEmail],
     },
@@ -248,8 +260,8 @@ Questions? Reply to this email and we'll help right away!
   });
 
   try {
-    console.log(`Attempting to send claim email from ${FROM_EMAIL} to ${order.customerEmail}`);
-    const result = await ses.send(command);
+    console.log(`Attempting to send claim email from ${getFromEmail()} to ${order.customerEmail}`);
+    const result = await getSESClient().send(command);
     console.log(`Claim email sent successfully to ${order.customerEmail} for order ${order.id}`);
     console.log(`SES MessageId: ${result.MessageId}`);
     return;
@@ -257,7 +269,7 @@ Questions? Reply to this email and we'll help right away!
     console.error('Failed to send claim email:', error);
     console.error('SES Configuration:', {
       region: process.env.AWS_REGION,
-      fromEmail: FROM_EMAIL,
+      fromEmail: getFromEmail(),
       toEmail: order.customerEmail,
       hasAccessKeyId: !!process.env.AWS_ACCESS_KEY_ID,
       hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
@@ -270,7 +282,7 @@ Questions? Reply to this email and we'll help right away!
       } else if (error.message.includes('AccessDenied')) {
         console.error('AWS credentials may be incorrect or lack SES permissions');
       } else if (error.message.includes('Email address is not verified')) {
-        console.error('Sender email address is not verified in AWS SES. Verify:', FROM_EMAIL);
+        console.error('Sender email address is not verified in AWS SES. Verify:', getFromEmail());
       }
     }
 
@@ -292,6 +304,7 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
   }
 
   // Get the full order with template info
+  const { prisma } = await import('@/lib/prisma');
   const fullOrder = await prisma.order.findUnique({
     where: { id: order.id },
     include: {
@@ -508,7 +521,7 @@ Questions? Reply to this email for support.
   `;
 
   const command = new SendEmailCommand({
-    Source: `${FROM_NAME} <${FROM_EMAIL}>`,
+    Source: `${getFromName()} <${getFromEmail()}>`,
     Destination: {
       ToAddresses: [order.customerEmail],
     },
@@ -531,7 +544,7 @@ Questions? Reply to this email for support.
   });
 
   try {
-    await ses.send(command);
+    await getSESClient().send(command);
     console.log(`Delivery email sent to ${order.customerEmail} for order ${order.id}`);
 
     // Save customer email for future marketing if they consented

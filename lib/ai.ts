@@ -1,11 +1,17 @@
 import OpenAI from 'openai';
-import { prisma } from '@/lib/prisma';
 import { processPromptTemplate, buildPromptContext } from '@/lib/prompt-template';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization of OpenAI client
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 interface RecipientDetails {
   recipientName: string;
@@ -22,6 +28,7 @@ interface GeneratedContent {
  * Get order with template information
  */
 async function getOrderWithTemplate(orderId: string) {
+  const { prisma } = await import('@/lib/prisma');
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
@@ -73,7 +80,7 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
   try {
     // Generate letter and story in parallel
     const [letterResponse, storyResponse] = await Promise.all([
-      openai.chat.completions.create({
+      getOpenAIClient().chat.completions.create({
         model: 'gpt-4o',
         messages: [
           {
@@ -88,7 +95,7 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
         temperature: 0.9,
         max_tokens: 800,
       }),
-      openai.chat.completions.create({
+      getOpenAIClient().chat.completions.create({
         model: 'gpt-4o',
         messages: [
           {
@@ -134,6 +141,7 @@ export async function saveGeneratedContent(
   letter: string,
   story: string
 ): Promise<void> {
+  const { prisma } = await import('@/lib/prisma');
   await prisma.order.update({
     where: { id: orderId },
     data: {

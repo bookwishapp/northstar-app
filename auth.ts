@@ -2,11 +2,12 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
 import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 async function getUser(email: string): Promise<any | undefined> {
   try {
+    // Lazy load prisma only when actually needed at runtime
+    const { prisma } = await import('@/lib/prisma');
     const user = await prisma.adminUser.findUnique({
       where: { email },
     });
