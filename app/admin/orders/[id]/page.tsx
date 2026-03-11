@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import ResendEmailButton from './ResendEmailButton';
 
 // Force dynamic rendering to prevent database calls during build
 export const dynamic = 'force-dynamic';
@@ -185,12 +186,11 @@ export default async function OrderDetailsPage({
                 Retry Processing
               </button>
             )}
-            {!order.claimedAt && (
-              <button
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Resend Claim Email
-              </button>
+            {!order.claimedAt && order.customerEmail && (
+              <ResendEmailButton
+                orderId={order.id}
+                customerEmail={order.customerEmail}
+              />
             )}
             {order.generatedLetter && (
               <button
