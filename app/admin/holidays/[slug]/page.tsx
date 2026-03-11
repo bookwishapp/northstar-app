@@ -64,10 +64,13 @@ export default function EditHolidayTemplatePage() {
       if (response.ok) {
         alert('Template saved successfully');
       } else {
-        alert('Failed to save template');
+        const errorData = await response.json();
+        console.error('Save error:', errorData);
+        alert(`Failed to save template: ${errorData.error || 'Unknown error'} ${errorData.details ? JSON.stringify(errorData.details) : ''}`);
       }
     } catch (error) {
-      alert('Failed to save template');
+      console.error('Save exception:', error);
+      alert(`Failed to save template: ${error}`);
     } finally {
       setIsLoading(false);
     }

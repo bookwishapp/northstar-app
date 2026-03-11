@@ -38,7 +38,7 @@ const updateTemplateSchema = z.object({
   // Typography
   fontFamily: z.string().optional(),
   fontUrl: z.string().optional(),
-});
+}).passthrough(); // Allow additional fields that may exist on template
 
 /**
  * PATCH /api/admin/templates/[id]
@@ -63,8 +63,6 @@ export async function PATCH(
       where: { id: templateId },
       data: validatedData,
     });
-
-    console.log(`Template ${templateId} updated`);
 
     return NextResponse.json({
       success: true,
