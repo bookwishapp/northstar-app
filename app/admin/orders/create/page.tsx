@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import OrderCreateForm from '@/components/admin/OrderCreateForm';
 
+// Force dynamic rendering to prevent database calls during build
+export const dynamic = 'force-dynamic';
+
 async function getPrograms() {
   return prisma.program.findMany({
     where: { isActive: true },

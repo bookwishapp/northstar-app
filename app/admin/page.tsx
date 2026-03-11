@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
+// Force dynamic rendering to prevent database calls during build
+export const dynamic = 'force-dynamic';
+
 async function getStats() {
   const [totalOrders, pendingOrders, deliveredOrders, totalTemplates, totalPrograms] = await Promise.all([
     prisma.order.count(),

@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import OrderStatusFilter from '@/components/admin/OrderStatusFilter';
 
+// Force dynamic rendering to prevent database calls during build
+export const dynamic = 'force-dynamic';
+
 interface SearchParams {
   status?: string;
   page?: string;

@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
+// Force dynamic rendering to prevent database calls during build
+export const dynamic = 'force-dynamic';
+
 async function getPrograms(holidaySlug: string) {
   const programs = await prisma.program.findMany({
     where: { holidaySlug },
