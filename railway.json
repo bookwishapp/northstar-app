@@ -5,22 +5,6 @@
     "buildCommand": "npm run build"
   },
   "deploy": {
-    "startCommand": "npx prisma migrate deploy && npm run start",
-    "restartPolicyType": "on-failure",
-    "restartPolicyMaxRetries": 3
-  },
-  "services": {
-    "northstar-app": {
-      "source": {
-        "repo": "."
-      }
-    },
-    "northstar-gotenberg": {
-      "image": "gotenberg/gotenberg:8",
-      "deploy": {
-        "healthcheckPath": "/health",
-        "healthcheckTimeout": 30
-      }
-    }
+    "startCommand": "npx prisma migrate deploy && npm run start"
   }
 }
