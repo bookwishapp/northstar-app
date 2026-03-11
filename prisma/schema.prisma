@@ -41,6 +41,9 @@ model Order {
   // Physical delivery (collected at claim if deliveryType = physical)
   deliveryAddress   Json?       // { line1, line2, city, state, zip, country }
 
+  // Issue #5: Recipient address collection
+  recipientAddress  Json?       // { name, line1, line2, city, state, zip, country }
+
   // Generation
   generatedLetter   String?     // raw AI text
   generatedStory    String?     // raw AI text
@@ -105,6 +108,14 @@ model Template {
   repeatBackground      Boolean @default(true)
   headerFirstPageOnly   Boolean @default(true)
   waxSealLastPageOnly   Boolean @default(true)
+
+  // Critical fixes from GAP_REPORT.md
+  returnAddress         String?   // Issue #4: Configurable return address
+  envelopeBackgroundKey String?   // Issue #3: S3 key for envelope background
+  emailHeaderKey        String?   // Issue #11: S3 key for email header
+  fontSize              String    @default("14px") // Issue #7: Configurable font size (reduced from 16px)
+  letterDateFormat      String    @default("current") // Issue #10: "current" | "custom" | "holiday"
+  letterDateCustom      String?   // Issue #10: Custom date if format is "custom"
 
   // AI prompt config
   character       String    // "Santa Claus" | "Easter Bunny" | etc.
