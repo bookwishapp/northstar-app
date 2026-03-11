@@ -175,6 +175,8 @@ export default function EditHolidayTemplatePage() {
                   { slot: 'character', label: 'Character', key: 'characterKey' },
                   { slot: 'waxSeal', label: 'Wax Seal', key: 'waxSealKey' },
                   { slot: 'signature', label: 'Signature Block', key: 'signatureKey' },
+                  { slot: 'envelopeBackground', label: 'Envelope Background', key: 'envelopeBackgroundKey' },
+                  { slot: 'emailHeader', label: 'Email Header', key: 'emailHeaderKey' },
                 ].map((graphic) => (
                   <div key={graphic.slot} className="border rounded-lg p-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
