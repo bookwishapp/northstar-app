@@ -103,8 +103,6 @@ export async function POST(
     // Generate preview URL
     const previewUrl = await getPresignedDownloadUrl(s3Key, 3600); // 1 hour
 
-    console.log(`Uploaded ${slot} graphic for template ${templateId}: ${s3Key}`);
-
     return NextResponse.json({
       success: true,
       key: s3Key,
@@ -113,8 +111,9 @@ export async function POST(
 
   } catch (error) {
     console.error('Failed to upload template graphic:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to upload graphic' },
+      { error: `Failed to upload graphic: ${errorMessage}` },
       { status: 500 }
     );
   }

@@ -93,10 +93,13 @@ export default function EditHolidayTemplatePage() {
         fetchTemplate();
         alert(`${slot} uploaded successfully`);
       } else {
-        alert(`Failed to upload ${slot}`);
+        const errorData = await response.json();
+        console.error(`Upload error for ${slot}:`, errorData);
+        alert(`Failed to upload ${slot}: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
-      alert(`Failed to upload ${slot}`);
+      console.error(`Upload exception for ${slot}:`, error);
+      alert(`Failed to upload ${slot}: ${error}`);
     }
   }
 
