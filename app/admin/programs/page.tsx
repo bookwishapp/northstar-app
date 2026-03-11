@@ -1,5 +1,8 @@
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering to prevent database calls during build
+export const dynamic = 'force-dynamic';
+
 async function getPrograms() {
   return prisma.program.findMany({
     include: {
