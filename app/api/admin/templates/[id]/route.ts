@@ -22,6 +22,22 @@ const updateTemplateSchema = z.object({
   waxSealLastPageOnly: z.boolean().optional(),
   letterDateFormat: z.string().optional(),
   letterDateCustom: z.string().optional(),
+  // New fields from migration
+  fontSize: z.string().optional(),
+  returnAddress: z.string().optional(),
+  envelopeBackgroundKey: z.string().optional(),
+  emailHeaderKey: z.string().optional(),
+  // S3 asset keys (managed by upload endpoint but may be in template object)
+  backgroundKey: z.string().optional(),
+  headerKey: z.string().optional(),
+  characterKey: z.string().optional(),
+  waxSealKey: z.string().optional(),
+  signatureKey: z.string().optional(),
+  // Personalization configuration
+  personalizationFields: z.any().optional(),
+  // Typography
+  fontFamily: z.string().optional(),
+  fontUrl: z.string().optional(),
 });
 
 /**
