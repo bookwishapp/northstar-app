@@ -39,6 +39,33 @@ async function getOrderWithTemplate(orderId: string) {
 }
 
 /**
+ * Format recipient address from JSON object
+ */
+function formatRecipientAddress(recipientAddress: any): string {
+  if (!recipientAddress) return '';
+
+  const parts: string[] = [];
+
+  if (recipientAddress.name) parts.push(recipientAddress.name);
+  if (recipientAddress.line1) parts.push(recipientAddress.line1);
+  if (recipientAddress.line2) parts.push(recipientAddress.line2);
+
+  const cityStateLine: string[] = [];
+  if (recipientAddress.city) cityStateLine.push(recipientAddress.city);
+  if (recipientAddress.state) cityStateLine.push(recipientAddress.state);
+  if (cityStateLine.length > 0 && recipientAddress.zip) {
+    cityStateLine.push(recipientAddress.zip);
+  }
+  if (cityStateLine.length > 0) {
+    parts.push(cityStateLine.join(', '));
+  }
+
+  if (recipientAddress.country) parts.push(recipientAddress.country);
+
+  return parts.join('<br>');
+}
+
+/**
  * Build HTML for letter PDF
  */
 function buildLetterHtml(
@@ -50,6 +77,8 @@ function buildLetterHtml(
     .split('\n\n')
     .map((p: string) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
     .join('');
+
+  const formattedRecipientAddress = formatRecipientAddress(order.recipientAddress);
 
   return `
     <!DOCTYPE html>
@@ -69,10 +98,33 @@ function buildLetterHtml(
         body {
           font-family: '${template.fontFamily}', serif;
           color: ${template.primaryColor};
-          font-size: 16pt;
+          font-size: 14px;
           line-height: 1.6;
         }
 
+        /*
+         * MARGIN BEHAVIOR DOCUMENTATION:
+         *
+         * Template margins (marginTop, marginBottom, marginLeft, marginRight) are applied
+         * via padding on the .page container. This creates a content area where text and
+         * images are rendered.
+         *
+         * ELEMENTS THAT RESPECT MARGINS (positioned within the content area):
+         * - .header and header images (logo/letterhead)
+         * - .recipient-address (recipient's mailing address)
+         * - .letter-body (letter text content)
+         * - .signature-block (signature image or character name)
+         *
+         * DECORATIVE ELEMENTS THAT IGNORE MARGINS (fill entire page):
+         * - .page-background: Uses position:fixed with top:0, left:0, width:100%, height:100vh
+         *   to cover the entire page regardless of content margins. Background images and
+         *   patterns extend edge-to-edge for full visual coverage.
+         *
+         * SPECIAL POSITIONING:
+         * - .wax-seal: Uses position:fixed with bottom and right values set to the template
+         *   margins. This positions it at the edge of the content area (inside the margin),
+         *   not at the page edge.
+         */
         .page {
           width: 100%;
           min-height: 100vh;
@@ -101,11 +153,24 @@ function buildLetterHtml(
           margin-bottom: 2em;
         }
 
+        .header-image {
+          width: 100%;
+          max-width: 400px;
+        }
+
         .header img {
           max-width: 80%;
           max-height: 150px;
           width: auto;
           height: auto;
+        }
+
+        .recipient-address {
+          margin-bottom: 2em;
+          font-size: 12px;
+          line-height: 1.4;
+          position: relative;
+          z-index: 1;
         }
 
         .letter-body {
@@ -131,10 +196,17 @@ function buildLetterHtml(
         }
 
         .wax-seal {
+          display: none;
           position: fixed;
           bottom: ${template.marginBottom};
           right: ${template.marginRight};
           z-index: 2;
+        }
+
+        @page :last {
+          .wax-seal {
+            display: block;
+          }
         }
 
         .wax-seal img {
@@ -150,6 +222,12 @@ function buildLetterHtml(
         ${assets.headerDataUri ? `
           <div class="header">
             <img src="${assets.headerDataUri}" alt="">
+          </div>
+        ` : ''}
+
+        ${formattedRecipientAddress ? `
+          <div class="recipient-address">
+            ${formattedRecipientAddress}
           </div>
         ` : ''}
 
@@ -213,6 +291,30 @@ function buildStoryHtml(
           line-height: 1.8;
         }
 
+        /*
+         * MARGIN BEHAVIOR DOCUMENTATION:
+         *
+         * Template margins (marginTop, marginBottom, marginLeft, marginRight) are applied
+         * via padding on the .page container. This creates a content area for the story text
+         * and images.
+         *
+         * ELEMENTS THAT RESPECT MARGINS (positioned within the content area):
+         * - h1 (story title)
+         * - .story-body (story text content with paragraphs)
+         * - .character-image (character illustration)
+         * - .the-end (ending text)
+         *
+         * DECORATIVE ELEMENTS THAT IGNORE MARGINS (fill entire page):
+         * - .page-background: Uses position:fixed with top:0, left:0, width:100%, height:100vh
+         *   to cover the entire page regardless of content margins. Background images extend
+         *   edge-to-edge and use opacity:0.3 to create a subtle watermark effect behind the
+         *   story text without interfering with readability.
+         *
+         * IMAGE POSITIONING:
+         * - Character images are rendered within the content area (inside margins) and are
+         *   centered horizontally with text-align:center. They respect the margin boundaries
+         *   and flow with the story content.
+         */
         .page {
           width: 100%;
           min-height: 100vh;
@@ -273,6 +375,11 @@ function buildStoryHtml(
           margin: 2em 0;
         }
 
+        .character-image {
+          width: 200px;
+          height: auto;
+        }
+
         .character-image img {
           max-width: 200px;
           max-height: 200px;
@@ -319,6 +426,10 @@ function buildEnvelopeHtml(
   assets: any,
   template: any
 ): string {
+  const returnAddress = template.returnAddress
+    ? template.returnAddress.replace(/\n/g, '<br>')
+    : `${template.character}<br>North Pole`;
+
   return `
     <!DOCTYPE html>
     <html>
@@ -334,6 +445,31 @@ function buildEnvelopeHtml(
           margin: 0;
         }
 
+        /*
+         * ENVELOPE MARGIN BEHAVIOR DOCUMENTATION:
+         *
+         * The envelope PDF uses a fixed size (9.5in x 4.125in) with NO template margins.
+         * All margins are hardcoded to "0" when rendering the envelope (see renderWithGotenberg
+         * call parameters: marginTop: '0', marginBottom: '0', marginLeft: '0', marginRight: '0').
+         *
+         * This is intentional because:
+         * 1. Envelopes have a specific physical dimension that must be exact
+         * 2. The border and background need to extend to the edges
+         * 3. Text elements use absolute positioning with fixed measurements (0.5in, 0.3in, etc.)
+         *
+         * DECORATIVE ELEMENTS THAT FILL ENTIRE ENVELOPE:
+         * - .envelope: Full-width/height container with background-image or gradient and border
+         *   that extends edge-to-edge
+         * - .decorative-border: Positioned with absolute coordinates (bottom:10px, left:10px, right:10px)
+         *
+         * POSITIONED ELEMENTS (use absolute positioning with fixed inch measurements):
+         * - .from: Return address at top-left (top:0.5in, left:0.5in)
+         * - .recipient: Centered text using flexbox on .envelope container
+         * - .stamp: Wax seal image at top-right (top:0.3in, right:0.3in)
+         * - .postmark: Special delivery mark near stamp (top:0.5in, right:1.5in)
+         *
+         * All positioning is absolute and measured in inches, independent of template margins.
+         */
         body {
           font-family: '${template.fontFamily}', serif;
           color: ${template.primaryColor};
@@ -347,7 +483,14 @@ function buildEnvelopeHtml(
           width: 100%;
           height: 100%;
           position: relative;
-          background: linear-gradient(135deg, #f5f5dc 0%, #faf6f0 100%);
+          ${assets.envelopeBackgroundDataUri ? `
+            background-image: url('${assets.envelopeBackgroundDataUri}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+          ` : `
+            background: linear-gradient(135deg, #f5f5dc 0%, #faf6f0 100%);
+          `}
           border: 3px solid ${template.accentColor};
           display: flex;
           align-items: center;
@@ -412,8 +555,7 @@ function buildEnvelopeHtml(
     <body>
       <div class="envelope">
         <div class="from">
-          From: ${template.character}<br>
-          North Pole
+          ${returnAddress}
         </div>
 
         <div class="recipient">

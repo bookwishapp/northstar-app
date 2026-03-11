@@ -52,6 +52,30 @@ async function getOrderWithTemplate(orderId: string) {
 }
 
 /**
+ * Determine the letter date based on template configuration
+ */
+function getLetterDate(template: any): string {
+  const format = template.letterDateFormat;
+
+  if (format === 'custom' && template.letterDateCustom) {
+    return template.letterDateCustom;
+  }
+
+  if (format === 'holiday') {
+    const holidayDates: Record<string, string> = {
+      'christmas': 'December 25',
+      'easter': 'Easter Sunday',
+      'birthday': 'Today',
+      'valentines': 'February 14',
+      'halloween': 'October 31',
+    };
+    return holidayDates[template.holidaySlug] || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  return new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+/**
  * Generate personalized letter and story content using OpenAI
  */
 export async function generateContent(orderId: string): Promise<GeneratedContent> {
@@ -64,16 +88,17 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
     throw new Error(`Order ${orderId} missing recipient name`);
   }
 
-  // Build context object for Handlebars processing
+  const letterDate = getLetterDate(template);
+
   const context = buildPromptContext(
     recipientName,
     recipientAge,
-    recipientDetails
+    recipientDetails,
+    letterDate
   );
 
   console.log('Recipient context:', JSON.stringify(context, null, 2));
 
-  // Process Handlebars templates
   const processedLetterPrompt = processPromptTemplate(template.letterPrompt, context);
   const processedStoryPrompt = processPromptTemplate(template.storyPrompt, context);
 

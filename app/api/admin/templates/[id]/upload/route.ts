@@ -26,7 +26,7 @@ export async function POST(
     const slot = formData.get('slot') as string;
 
     // Validate slot
-    const validSlots = ['background', 'header', 'character', 'waxSeal', 'signature'];
+    const validSlots = ['background', 'header', 'character', 'waxSeal', 'signature', 'envelopeBackground', 'emailHeader'];
     if (!validSlots.includes(slot)) {
       return NextResponse.json(
         { error: 'Invalid slot type' },
@@ -89,6 +89,8 @@ export async function POST(
       character: 'characterKey',
       waxSeal: 'waxSealKey',
       signature: 'signatureKey',
+      envelopeBackground: 'envelopeBackgroundKey',
+      emailHeader: 'emailHeaderKey',
     };
 
     updateData[keyFieldMap[slot]] = s3Key;

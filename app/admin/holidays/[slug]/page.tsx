@@ -420,7 +420,7 @@ export default function EditHolidayTemplatePage() {
               <div className="space-y-6">
                 {/* Existing Fields */}
                 {(template.personalizationFields || []).map((field: PersonalizationField, index: number) => (
-                  <div key={field.key} className="bg-white p-4 border rounded-lg">
+                  <div key={field.name} className="bg-white p-4 border rounded-lg">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
@@ -428,10 +428,10 @@ export default function EditHolidayTemplatePage() {
                         </label>
                         <input
                           type="text"
-                          value={field.key}
+                          value={field.name}
                           onChange={(e) => {
                             const fields = [...(template.personalizationFields || [])];
-                            fields[index] = { ...fields[index], key: e.target.value };
+                            fields[index] = { ...fields[index], name: e.target.value };
                             setTemplate({ ...template, personalizationFields: fields });
                           }}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
@@ -468,7 +468,6 @@ export default function EditHolidayTemplatePage() {
                           <option value="text">Text</option>
                           <option value="textarea">Textarea</option>
                           <option value="number">Number</option>
-                          <option value="select">Select/Dropdown</option>
                         </select>
                       </div>
 
@@ -514,29 +513,6 @@ export default function EditHolidayTemplatePage() {
                         </button>
                       </div>
                     </div>
-
-                    {/* Options for select type */}
-                    {field.type === 'select' && (
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Options (one per line)
-                        </label>
-                        <textarea
-                          value={(field.options || []).join('\n')}
-                          onChange={(e) => {
-                            const fields = [...(template.personalizationFields || [])];
-                            fields[index] = {
-                              ...fields[index],
-                              options: e.target.value.split('\n').filter(o => o.trim())
-                            };
-                            setTemplate({ ...template, personalizationFields: fields });
-                          }}
-                          rows={3}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                          placeholder="Very good&#10;Mostly good&#10;Trying their best"
-                        />
-                      </div>
-                    )}
                   </div>
                 ))}
 
@@ -544,7 +520,7 @@ export default function EditHolidayTemplatePage() {
                 <button
                   onClick={() => {
                     const newField: PersonalizationField = {
-                      key: '',
+                      name: '',
                       label: '',
                       type: 'text',
                       placeholder: '',
@@ -562,7 +538,7 @@ export default function EditHolidayTemplatePage() {
                 {extractedVariables.length > 0 && (
                   <button
                     onClick={() => {
-                      const existingKeys = new Set((template.personalizationFields || []).map((f: PersonalizationField) => f.key));
+                      const existingKeys = new Set((template.personalizationFields || []).map((f: PersonalizationField) => f.name));
                       const newFields = extractedVariables
                         .filter(v => !existingKeys.has(v))
                         .map(v => generateFieldConfig(v));

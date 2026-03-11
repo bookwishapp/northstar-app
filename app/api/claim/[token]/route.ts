@@ -68,7 +68,16 @@ export async function GET(
   }
 }
 
-// Schema for claim submission
+const addressSchema = z.object({
+  name: z.string().min(1),
+  line1: z.string().min(1),
+  line2: z.string().optional(),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  zip: z.string().min(1),
+  country: z.string().min(1),
+});
+
 const claimSchema = z.object({
   customerName: z.string().min(1),
   recipientName: z.string().min(1),
@@ -76,6 +85,7 @@ const claimSchema = z.object({
   recipientDetails: z.record(z.string()).optional(),
   deliveryEmail: z.string().email(),
   emailConsent: z.boolean(),
+  recipientAddress: addressSchema,
   deliveryAddress: z.object({
     line1: z.string().min(1),
     line2: z.string().optional(),
@@ -139,6 +149,7 @@ export async function POST(
         recipientName: validatedData.recipientName,
         recipientAge: validatedData.recipientAge,
         recipientDetails: validatedData.recipientDetails || {},
+        recipientAddress: validatedData.recipientAddress,
         deliveryAddress: validatedData.deliveryAddress || undefined,
         emailConsent: validatedData.emailConsent,
         status: 'pending_generation',

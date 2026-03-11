@@ -31,14 +31,18 @@ export function processPromptTemplate(
 export function buildPromptContext(
   recipientName: string,
   recipientAge?: number | null,
-  recipientDetails?: any
+  recipientDetails?: any,
+  letterDate?: string
 ): Record<string, any> {
   const context: Record<string, any> = {
     recipientName: recipientName || 'Friend',
     recipientAge: recipientAge || '',
   };
 
-  // Add all recipient details to the context
+  if (letterDate) {
+    context.letterDate = letterDate;
+  }
+
   if (recipientDetails && typeof recipientDetails === 'object') {
     Object.entries(recipientDetails).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== '') {
@@ -47,9 +51,7 @@ export function buildPromptContext(
     });
   }
 
-  // Add commonly used derived fields
   if (recipientAge) {
-    // Determine age group for more personalized content
     if (recipientAge <= 3) {
       context.ageGroup = 'toddler';
     } else if (recipientAge <= 6) {
@@ -63,7 +65,6 @@ export function buildPromptContext(
     }
   }
 
-  // Set default pronouns if not provided
   if (!context.recipientPronouns) {
     context.recipientPronouns = 'they/them';
   }

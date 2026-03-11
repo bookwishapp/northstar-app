@@ -20,6 +20,8 @@ const updateTemplateSchema = z.object({
   repeatBackground: z.boolean().optional(),
   headerFirstPageOnly: z.boolean().optional(),
   waxSealLastPageOnly: z.boolean().optional(),
+  letterDateFormat: z.string().optional(),
+  letterDateCustom: z.string().optional(),
 });
 
 /**

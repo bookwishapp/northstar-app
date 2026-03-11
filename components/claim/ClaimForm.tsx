@@ -35,6 +35,15 @@ export default function ClaimForm({ token, order, template, program }: Props) {
     deliveryEmail: '',
     emailConsent: false,
     recipientDetails: {} as Record<string, any>,
+    recipientAddress: {
+      name: '',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      zip: '',
+      country: 'USA'
+    },
     deliveryAddress: {
       line1: '',
       line2: '',
@@ -55,9 +64,24 @@ export default function ClaimForm({ token, order, template, program }: Props) {
     setError('');
 
     try {
+      const recipientDetails: Record<string, any> = {};
+
+      fields.forEach((field) => {
+        const value = formData.recipientDetails[field.name];
+        if (value !== undefined && value !== null && value !== '') {
+          if (field.type === 'number') {
+            recipientDetails[field.name] = Number(value);
+          } else {
+            recipientDetails[field.name] = value;
+          }
+        }
+      });
+
       const payload = {
         ...formData,
         recipientAge: parseInt(formData.recipientAge),
+        recipientDetails,
+        recipientAddress: formData.recipientAddress,
         deliveryAddress: isPhysical ? formData.deliveryAddress : undefined
       };
 
@@ -72,7 +96,6 @@ export default function ClaimForm({ token, order, template, program }: Props) {
         throw new Error(data.error || 'Failed to submit');
       }
 
-      // Redirect to confirmation page
       router.push(`/claim/${token}/success`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -81,29 +104,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
   }
 
   function renderField(field: PersonalizationField) {
-    const value = formData.recipientDetails[field.key] || '';
-
-    if (field.type === 'select') {
-      return (
-        <select
-          value={value}
-          onChange={(e) => setFormData({
-            ...formData,
-            recipientDetails: {
-              ...formData.recipientDetails,
-              [field.key]: e.target.value
-            }
-          })}
-          required={field.required}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-        >
-          <option value="">Select...</option>
-          {field.options?.map(opt => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-      );
-    }
+    const value = formData.recipientDetails[field.name] || '';
 
     if (field.type === 'textarea') {
       return (
@@ -113,7 +114,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
             ...formData,
             recipientDetails: {
               ...formData.recipientDetails,
-              [field.key]: e.target.value
+              [field.name]: e.target.value
             }
           })}
           placeholder={field.placeholder}
@@ -124,15 +125,34 @@ export default function ClaimForm({ token, order, template, program }: Props) {
       );
     }
 
+    if (field.type === 'number') {
+      return (
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => setFormData({
+            ...formData,
+            recipientDetails: {
+              ...formData.recipientDetails,
+              [field.name]: e.target.value
+            }
+          })}
+          placeholder={field.placeholder}
+          required={field.required}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+        />
+      );
+    }
+
     return (
       <input
-        type={field.type}
+        type="text"
         value={value}
         onChange={(e) => setFormData({
           ...formData,
           recipientDetails: {
             ...formData.recipientDetails,
-            [field.key]: e.target.value
+            [field.name]: e.target.value
           }
         })}
         placeholder={field.placeholder}
@@ -240,6 +260,131 @@ export default function ClaimForm({ token, order, template, program }: Props) {
           </div>
         </div>
 
+        {/* Recipient Address */}
+        <div className="border-b pb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recipient Address</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Who is this letter for? This information will appear on the letter.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Recipient Full Name
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.recipientAddress.name}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  recipientAddress: { ...formData.recipientAddress, name: e.target.value }
+                })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Street Address
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.recipientAddress.line1}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  recipientAddress: { ...formData.recipientAddress, line1: e.target.value }
+                })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Apartment, Suite, etc. (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.recipientAddress.line2}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  recipientAddress: { ...formData.recipientAddress, line2: e.target.value }
+                })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  City
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.recipientAddress.city}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    recipientAddress: { ...formData.recipientAddress, city: e.target.value }
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  State/Province
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={2}
+                  value={formData.recipientAddress.state}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    recipientAddress: { ...formData.recipientAddress, state: e.target.value.toUpperCase() }
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                  placeholder="XX"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  ZIP/Postal Code
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.recipientAddress.zip}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    recipientAddress: { ...formData.recipientAddress, zip: e.target.value }
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Country
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.recipientAddress.country}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  recipientAddress: { ...formData.recipientAddress, country: e.target.value }
+                })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Holiday-Specific Fields */}
         <div className="border-b pb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -248,7 +393,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
 
           <div className="space-y-6">
             {fields.map((field) => (
-              <div key={field.key}>
+              <div key={field.name}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {field.label}
                 </label>

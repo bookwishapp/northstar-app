@@ -1,12 +1,11 @@
 import Handlebars from 'handlebars';
 
 export interface PersonalizationField {
-  key: string;
+  name: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'select';
+  type: 'text' | 'textarea' | 'number';
   placeholder?: string;
   required: boolean;
-  options?: string[]; // for select type
 }
 
 /**
@@ -68,150 +67,31 @@ export function extractTemplateVariables(template: {
 }
 
 /**
- * Default field configurations for common variable names
+ * Register custom Handlebars helpers for all personalization fields
  */
-export const defaultFieldConfigs: Record<string, Partial<PersonalizationField>> = {
-  // Child-related
-  childName: {
-    label: "Child's Name",
-    type: 'text',
-    placeholder: "Enter the child's name",
-    required: true
-  },
-  childAge: {
-    label: "Child's Age",
-    type: 'number',
-    placeholder: "How old are they?",
-    required: true
-  },
-
-  // Activities and interests
-  favoriteActivities: {
-    label: "Favorite Activities",
-    type: 'textarea',
-    placeholder: "What do they love to do? (sports, hobbies, games...)",
-    required: true
-  },
-  favoriteActivity: {
-    label: "Favorite Activity",
-    type: 'text',
-    placeholder: "Their favorite thing to do",
-    required: true
-  },
-  currentInterest: {
-    label: "Current Interest",
-    type: 'text',
-    placeholder: "What are they really into right now?",
-    required: true
-  },
-  favoriteColor: {
-    label: "Favorite Color",
-    type: 'text',
-    placeholder: "Their favorite color",
-    required: false
-  },
-
-  // Achievements and qualities
-  accomplishment: {
-    label: "Recent Accomplishment",
-    type: 'textarea',
-    placeholder: "Something great they've done recently",
-    required: true
-  },
-  recentKindness: {
-    label: "Recent Act of Kindness",
-    type: 'textarea',
-    placeholder: "How have they shown kindness?",
-    required: true
-  },
-  specialQualities: {
-    label: "Special Qualities",
-    type: 'textarea',
-    placeholder: "What makes them special?",
-    required: false
-  },
-
-  // Family and friends
-  siblings: {
-    label: "Siblings",
-    type: 'text',
-    placeholder: "Brother Jack, sister Emma... (optional)",
-    required: false
-  },
-  pets: {
-    label: "Pets",
-    type: 'text',
-    placeholder: "Dog named Max, cat named Whiskers... (optional)",
-    required: false
-  },
-  bestFriend: {
-    label: "Best Friend",
-    type: 'text',
-    placeholder: "Their best friend's name",
-    required: false
-  },
-
-  // Holiday-specific
-  costume: {
-    label: "Halloween Costume",
-    type: 'text',
-    placeholder: "What are they dressing up as?",
-    required: true
-  },
-  favoriteCandy: {
-    label: "Favorite Candy",
-    type: 'text',
-    placeholder: "Their favorite Halloween candy",
-    required: true
-  },
-  birthdayWish: {
-    label: "Birthday Wish",
-    type: 'text',
-    placeholder: "What's their birthday wish?",
-    required: false
-  },
-  behavior: {
-    label: "Behavior This Year",
-    type: 'select',
-    options: ['Very good', 'Mostly good', 'Trying their best'],
-    required: true
-  },
-
-  // Generic fallback
-  specialMessage: {
-    label: "Special Message",
-    type: 'textarea',
-    placeholder: "Any special message to include?",
-    required: false
-  }
-};
+export function registerPersonalizationHelpers(recipientDetails: Record<string, any> = {}): void {
+  Object.keys(recipientDetails).forEach((fieldName) => {
+    const value = recipientDetails[fieldName];
+    if (value !== undefined && value !== null && value !== '') {
+      Handlebars.registerHelper(fieldName, () => value);
+    }
+  });
+}
 
 /**
  * Generate field configuration for a variable name
  */
 export function generateFieldConfig(variableName: string): PersonalizationField {
-  // Check if we have a default config
-  const defaultConfig = defaultFieldConfigs[variableName];
-  if (defaultConfig) {
-    return {
-      key: variableName,
-      type: 'text',
-      required: true,
-      ...defaultConfig
-    } as PersonalizationField;
-  }
-
-  // Generate a sensible default based on the variable name
   const label = variableName
-    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-    .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase())
     .trim();
 
-  // Determine type based on variable name patterns
   let type: PersonalizationField['type'] = 'text';
   if (variableName.toLowerCase().includes('message') ||
       variableName.toLowerCase().includes('story') ||
-      variableName.toLowerCase().includes('description')) {
+      variableName.toLowerCase().includes('description') ||
+      variableName.toLowerCase().includes('things')) {
     type = 'textarea';
   } else if (variableName.toLowerCase().includes('age') ||
              variableName.toLowerCase().includes('number') ||
@@ -220,37 +100,10 @@ export function generateFieldConfig(variableName: string): PersonalizationField 
   }
 
   return {
-    key: variableName,
+    name: variableName,
     label,
     type,
     placeholder: `Enter ${label.toLowerCase()}`,
     required: true
   };
-}
-
-/**
- * Generate field configurations for all variables in a template
- */
-export function generateTemplateFields(template: {
-  letterPrompt?: string | null;
-  storyPrompt?: string | null;
-  personalizationFields?: any;
-}): PersonalizationField[] {
-  // Extract all variables from prompts
-  const variables = extractTemplateVariables(template);
-
-  // If template has existing field configs, use those
-  const existingFields = template.personalizationFields as PersonalizationField[] || [];
-  const existingKeys = new Set(existingFields.map(f => f.key));
-
-  // Generate configs for new variables
-  const fields: PersonalizationField[] = [...existingFields];
-
-  for (const variable of variables) {
-    if (!existingKeys.has(variable)) {
-      fields.push(generateFieldConfig(variable));
-    }
-  }
-
-  return fields;
 }

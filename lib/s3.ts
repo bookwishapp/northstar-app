@@ -146,13 +146,15 @@ export async function resolveTemplateAssets(template: {
   characterKey?: string | null;
   waxSealKey?: string | null;
   signatureKey?: string | null;
+  envelopeBackgroundKey?: string | null;
 }) {
-  const [background, header, character, waxSeal, signature] = await Promise.all([
+  const [background, header, character, waxSeal, signature, envelopeBackground] = await Promise.all([
     getAssetAsDataUri(template.backgroundKey || null),
     getAssetAsDataUri(template.headerKey || null),
     getAssetAsDataUri(template.characterKey || null),
     getAssetAsDataUri(template.waxSealKey || null),
     getAssetAsDataUri(template.signatureKey || null),
+    getAssetAsDataUri(template.envelopeBackgroundKey || null),
   ]);
 
   return {
@@ -161,5 +163,6 @@ export async function resolveTemplateAssets(template: {
     characterDataUri: character,
     waxSealDataUri: waxSeal,
     signatureDataUri: signature,
+    envelopeBackgroundDataUri: envelopeBackground,
   };
 }

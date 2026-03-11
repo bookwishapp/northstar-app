@@ -15,7 +15,11 @@ interface Template {
   characterKey: string | null;
   waxSealKey: string | null;
   signatureKey: string | null;
+  envelopeBackgroundKey: string | null;
+  emailHeaderKey: string | null;
   isActive: boolean;
+  letterDateFormat: string;
+  letterDateCustom: string | null;
 }
 
 interface Props {
@@ -32,6 +36,8 @@ export default function TemplateEditor({ template }: Props) {
     letterPrompt: template.letterPrompt,
     storyPrompt: template.storyPrompt,
     isActive: template.isActive,
+    letterDateFormat: template.letterDateFormat,
+    letterDateCustom: template.letterDateCustom || '',
   });
 
   const [testPromptData, setTestPromptData] = useState({
@@ -57,6 +63,8 @@ export default function TemplateEditor({ template }: Props) {
     { id: 'character', label: 'Character', current: template.characterKey },
     { id: 'waxSeal', label: 'Wax Seal', current: template.waxSealKey },
     { id: 'signature', label: 'Signature', current: template.signatureKey },
+    { id: 'envelopeBackground', label: 'Envelope Background', current: template.envelopeBackgroundKey },
+    { id: 'emailHeader', label: 'Email Header', current: template.emailHeaderKey },
   ];
 
   async function handleSave() {
@@ -193,6 +201,42 @@ export default function TemplateEditor({ template }: Props) {
                 Template is active
               </label>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Letter Date Format
+              </label>
+              <select
+                value={formData.letterDateFormat}
+                onChange={(e) => setFormData({ ...formData, letterDateFormat: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+              >
+                <option value="current">Current Date</option>
+                <option value="custom">Custom Date</option>
+                <option value="holiday">Holiday Date</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Choose how the letter date should be determined
+              </p>
+            </div>
+
+            {formData.letterDateFormat === 'custom' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Custom Date
+                </label>
+                <input
+                  type="text"
+                  value={formData.letterDateCustom}
+                  onChange={(e) => setFormData({ ...formData, letterDateCustom: e.target.value })}
+                  placeholder="e.g., December 25, 2024"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Enter a specific date for the letter
+                </p>
+              </div>
+            )}
           </div>
         )}
 

@@ -318,12 +318,14 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
 
   const character = fullOrder?.program?.template?.character || 'Santa Claus';
   const holidayName = getHolidayName(order.holidaySlug);
+  const emailHeaderKey = fullOrder?.program?.template?.emailHeaderKey;
 
   // Generate presigned URLs for PDFs (24 hour expiry)
-  const [letterUrl, storyUrl, envelopeUrl] = await Promise.all([
+  const [letterUrl, storyUrl, envelopeUrl, emailHeaderUrl] = await Promise.all([
     getPresignedDownloadUrl(pdfS3Keys.letterKey, 86400),
     getPresignedDownloadUrl(pdfS3Keys.storyKey, 86400),
     pdfS3Keys.envelopeKey ? getPresignedDownloadUrl(pdfS3Keys.envelopeKey, 86400) : Promise.resolve(null),
+    emailHeaderKey ? getPresignedDownloadUrl(emailHeaderKey, 86400) : Promise.resolve(null),
   ]);
 
   const subject = `${order.recipientName}'s ${holidayName} Letter Has Arrived!`;
@@ -349,6 +351,10 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
           border-radius: 10px;
           overflow: hidden;
           box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .email-header-image {
+          width: 100%;
+          display: block;
         }
         .header {
           background: linear-gradient(135deg, #8b0000 0%, #d2001f 100%);
@@ -420,6 +426,7 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
     </head>
     <body>
       <div class="container">
+        ${emailHeaderUrl ? `<img src="${emailHeaderUrl}" alt="Email Header" class="email-header-image" />` : ''}
         <div class="header">
           <h1>Your Magical Letter Has Arrived!</h1>
           <p>From ${character} with Love</p>
