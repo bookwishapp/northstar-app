@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "SKIP_ENV_VALIDATION=1 prisma generate && next build",
+    "build": "DATABASE_URL=\"postgresql://postgres:dummy@localhost:5432/railway\" prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
