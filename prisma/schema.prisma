@@ -47,6 +47,8 @@ model Order {
   // Generation
   generatedLetter   String?     // raw AI text
   generatedStory    String?     // raw AI text
+  regenerationCount Int         @default(0) // track number of regenerations (max 3)
+  contentApprovedAt DateTime?   // when user approved the content
 
   // PDFs (S3 keys)
   letterPdfKey      String?
