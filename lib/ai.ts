@@ -144,10 +144,10 @@ async function generateWithProvider(
 
   if (provider === 'anthropic') {
     // Anthropic models for creative writing:
-    // - claude-3-5-sonnet-20241022: Best for creative writing (default)
-    // - claude-3-5-haiku-20241022: Faster, cheaper, still good
-    // - claude-3-opus-20240229: Previous best, very capable
-    const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
+    // - claude-sonnet-4-6: Best for creative writing (default)
+    // - claude-haiku-4-5-20251001: Faster, cheaper, still good
+    // - claude-opus-4-6: Previous best, very capable
+    const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
     console.log(`Using Anthropic model: ${model}`);
 
     const client = getAnthropicClient();
@@ -167,6 +167,7 @@ async function generateWithProvider(
       ],
     }).then(res => {
       console.log('Letter generation completed');
+      console.log('Letter model used:', res.model); // Log actual model from response
       return res;
     }).catch(err => {
       console.error('Letter generation failed:', err);
@@ -186,6 +187,7 @@ async function generateWithProvider(
       ],
     }).then(res => {
       console.log('Story generation completed');
+      console.log('Story model used:', res.model); // Log actual model from response
       return res;
     }).catch(err => {
       console.error('Story generation failed:', err);

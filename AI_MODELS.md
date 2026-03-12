@@ -18,9 +18,9 @@ The application supports both Anthropic (Claude) and OpenAI models for generatin
 
 | Model | Environment Value | Description | Best For |
 |-------|------------------|-------------|----------|
-| Claude 3.5 Sonnet | `claude-3-5-sonnet-20241022` | **Default**. Latest and best for creative writing | High-quality letters with nuance and creativity |
-| Claude 3.5 Haiku | `claude-3-5-haiku-20241022` | Faster and cheaper, still excellent | Quick generation with good quality |
-| Claude 3 Opus | `claude-3-opus-20240229` | Previous flagship, very capable | Alternative if Sonnet has issues |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | **Default**. Latest and best for creative writing | High-quality letters with nuance and creativity |
+| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | Faster and cheaper, still excellent | Quick generation with good quality |
+| Claude Opus 4.6 | `claude-opus-4-6` | Previous flagship, very capable | Alternative if Sonnet has issues |
 
 ### OpenAI Models (Fallback or Alternative)
 
@@ -34,9 +34,9 @@ The application supports both Anthropic (Claude) and OpenAI models for generatin
 
 ## Configuration Examples
 
-### Use Claude 3.5 Haiku for faster generation:
+### Use Claude Haiku 4.5 for faster generation:
 ```bash
-ANTHROPIC_MODEL=claude-3-5-haiku-20241022
+ANTHROPIC_MODEL=claude-haiku-4-5-20251001
 ```
 
 ### Use GPT-4o Mini for cost-effective OpenAI:
@@ -67,37 +67,37 @@ OPENAI_MODEL=gpt-4o
 ## Performance Comparison
 
 ### Generation Speed (fastest to slowest)
-1. Claude 3.5 Haiku
+1. Claude Haiku 4.5
 2. GPT-4o Mini
-3. Claude 3.5 Sonnet
+3. Claude Sonnet 4.6
 4. GPT-4o
 5. GPT-4 Turbo
-6. Claude 3 Opus
+6. Claude Opus 4.6
 7. GPT-4
 
 ### Creative Quality (best to good)
-1. Claude 3.5 Sonnet ⭐
-2. Claude 3 Opus
+1. Claude Sonnet 4.6 ⭐
+2. Claude Opus 4.6
 3. GPT-4o
 4. GPT-4 Turbo
-5. Claude 3.5 Haiku
+5. Claude Haiku 4.5
 6. GPT-4
 7. GPT-4o Mini
 
 ### Cost Efficiency (cheapest to most expensive)
-1. Claude 3.5 Haiku
+1. Claude Haiku 4.5
 2. GPT-4o Mini
-3. Claude 3.5 Sonnet
+3. Claude Sonnet 4.6
 4. GPT-4o
 5. GPT-4 Turbo
-6. Claude 3 Opus
+6. Claude Opus 4.6
 7. GPT-4
 
 ## Recommendations
 
-- **For best quality**: Use Claude 3.5 Sonnet (default)
-- **For faster generation**: Use Claude 3.5 Haiku or GPT-4o Mini
-- **For cost savings**: Use Claude 3.5 Haiku or GPT-4o Mini
+- **For best quality**: Use Claude Sonnet 4.6 (default)
+- **For faster generation**: Use Claude Haiku 4.5 or GPT-4o Mini
+- **For cost savings**: Use Claude Haiku 4.5 or GPT-4o Mini
 - **For reliability**: Have both API keys configured for automatic fallback
 
 ## Temperature Settings
