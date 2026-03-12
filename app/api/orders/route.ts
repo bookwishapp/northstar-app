@@ -8,7 +8,7 @@ const createOrderSchema = z.object({
   externalOrderId: z.string().optional(),
   programId: z.string(),
   deliveryType: z.enum(['digital', 'physical']),
-  customerEmail: z.string().email(),
+  customerEmail: z.string().email().optional(), // Optional for Etsy orders
 });
 
 /**
@@ -63,21 +63,25 @@ export async function POST(request: NextRequest) {
         holidaySlug: program.holidaySlug,
         programId: validatedData.programId,
         deliveryType: validatedData.deliveryType,
-        customerEmail: validatedData.customerEmail,
+        customerEmail: validatedData.customerEmail || null,
         status: 'pending_claim',
       },
     });
 
     console.log(`Created order ${order.id} from Etsy ${validatedData.externalOrderId}`);
 
-    // Send claim email to customer
-    try {
-      await sendClaimEmail(order);
-      console.log(`Claim email sent for order ${order.id}`);
-    } catch (emailError) {
-      console.error(`Failed to send claim email for order ${order.id}:`, emailError);
-      // Don't fail the order creation if email fails
-      // Admin can manually resend from admin panel
+    // Send claim email to customer if email provided
+    if (validatedData.customerEmail) {
+      try {
+        await sendClaimEmail(order);
+        console.log(`Claim email sent for order ${order.id}`);
+      } catch (emailError) {
+        console.error(`Failed to send claim email for order ${order.id}:`, emailError);
+        // Don't fail the order creation if email fails
+        // Admin can manually resend from admin panel
+      }
+    } else {
+      console.log(`No email provided for order ${order.id} - send claim link to Etsy messages`);
     }
 
     return NextResponse.json({

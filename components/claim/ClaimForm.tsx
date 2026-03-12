@@ -75,7 +75,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
     recipientName: order.recipientName || '',
     recipientAge: order.recipientAge?.toString() || '',
     deliveryEmail: order.customerEmail || '',
-    emailConsent: order.emailConsent || false,
+    emailConsent: order.emailConsent !== null ? order.emailConsent : true, // Default to true for new claims
     recipientDetails: order.recipientDetails || {} as Record<string, any>,
     recipientAddress: order.recipientAddress || {
       name: '',
@@ -281,6 +281,9 @@ export default function ClaimForm({ token, order, template, program }: Props) {
                 onChange={(e) => setFormData({ ...formData, deliveryEmail: e.target.value })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
               />
+              <p className="mt-1 text-sm text-gray-500">
+                Used to deliver your order tracking and digital files{order.deliveryType === 'digital' ? ' (PDFs)' : ''}
+              </p>
             </div>
           </div>
         </div>

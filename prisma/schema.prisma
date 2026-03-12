@@ -69,6 +69,7 @@ model Program {
   name            String    // "Santa Letter — Deluxe"
   tier            String    // "standard" | "deluxe"
   deliveryTypes   String[]  // ["digital", "physical"] or just ["digital"]
+  productTypes    String[]  @default(["letter", "story"]) // ["letter"], ["story"], or ["letter", "story"]
   priceDigital    Float?
   pricePhysical   Float?
   isActive        Boolean   @default(true)

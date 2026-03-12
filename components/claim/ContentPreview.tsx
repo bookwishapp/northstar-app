@@ -40,7 +40,7 @@ export default function ContentPreview({ letter, story, regenerationCount }: Con
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Letter from Santa
+            Letter Preview
           </button>
           <button
             onClick={() => setActiveTab('story')}

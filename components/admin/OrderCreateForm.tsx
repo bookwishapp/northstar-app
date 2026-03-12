@@ -123,16 +123,18 @@ export default function OrderCreateForm({ programs }: Props) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Customer Email
+            Customer Email (Optional for Etsy orders)
           </label>
           <input
             type="email"
-            required
             value={formData.customerEmail}
             onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
             placeholder="customer@example.com"
           />
+          <p className="mt-1 text-sm text-gray-500">
+            Leave blank for Etsy orders - customer will provide email when claiming
+          </p>
         </div>
 
         <div>

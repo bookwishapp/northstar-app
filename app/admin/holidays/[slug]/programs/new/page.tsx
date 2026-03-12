@@ -92,6 +92,36 @@ export default function CreateProgramPage() {
           </div>
 
           <fieldset>
+            <legend className="text-sm font-medium text-gray-700">Product Types</legend>
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="letter"
+                  id="letter"
+                  defaultChecked
+                  className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                <label htmlFor="letter" className="ml-2 block text-sm text-gray-900">
+                  Personalized Letter
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="story"
+                  id="story"
+                  defaultChecked
+                  className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                <label htmlFor="story" className="ml-2 block text-sm text-gray-900">
+                  Personalized Story
+                </label>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
             <legend className="text-sm font-medium text-gray-700">Delivery Types</legend>
             <div className="mt-2 space-y-2">
               <div className="flex items-center">

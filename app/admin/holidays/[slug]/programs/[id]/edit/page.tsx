@@ -9,6 +9,7 @@ interface Program {
   name: string;
   tier: string;
   deliveryTypes: string[];
+  productTypes?: string[];
   priceDigital: number | null;
   pricePhysical: number | null;
   isActive: boolean;
@@ -64,10 +65,15 @@ export default function EditProgramPage() {
     if (formData.get('digital')) deliveryTypes.push('digital');
     if (formData.get('physical')) deliveryTypes.push('physical');
 
+    const productTypes = [];
+    if (formData.get('letter')) productTypes.push('letter');
+    if (formData.get('story')) productTypes.push('story');
+
     const data = {
       name: formData.get('name'),
       tier: formData.get('tier'),
       deliveryTypes,
+      productTypes,
       priceDigital: formData.get('priceDigital') ? parseFloat(formData.get('priceDigital') as string) : null,
       pricePhysical: formData.get('pricePhysical') ? parseFloat(formData.get('pricePhysical') as string) : null,
       isActive: formData.get('isActive') === 'true',
@@ -175,6 +181,36 @@ export default function EditProgramPage() {
               ))}
             </select>
           </div>
+
+          <fieldset>
+            <legend className="text-sm font-medium text-gray-700">Product Types</legend>
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center">
+                <input
+                  id="letter"
+                  name="letter"
+                  type="checkbox"
+                  defaultChecked={program.productTypes?.includes('letter') ?? true}
+                  className="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300 rounded"
+                />
+                <label htmlFor="letter" className="ml-3 text-sm text-gray-700">
+                  Personalized Letter
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="story"
+                  name="story"
+                  type="checkbox"
+                  defaultChecked={program.productTypes?.includes('story') ?? true}
+                  className="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300 rounded"
+                />
+                <label htmlFor="story" className="ml-3 text-sm text-gray-700">
+                  Personalized Story
+                </label>
+              </div>
+            </div>
+          </fieldset>
 
           <fieldset>
             <legend className="text-sm font-medium text-gray-700">Delivery Types</legend>
