@@ -162,7 +162,14 @@ async function generateWithProvider(
       messages: [
         {
           role: 'user',
-          content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.`,
+          content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.
+
+IMPORTANT:
+- Write ONLY the letter content itself, starting with "Dear ${recipientName},"
+- Do NOT include any asterisks, stage directions, or formatting marks
+- Do NOT include headers like "A Letter for..." or "Delivered to..."
+- Do NOT use asterisks for emphasis - use natural language instead
+- Write in a natural, flowing narrative style as if speaking directly to the child`,
         },
       ],
     }).then(res => {
@@ -182,7 +189,14 @@ async function generateWithProvider(
       messages: [
         {
           role: 'user',
-          content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.`,
+          content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.
+
+IMPORTANT:
+- Write ONLY the story narrative itself
+- Do NOT include any asterisks, stage directions, or formatting marks
+- Do NOT use asterisks for emphasis or scene breaks
+- Write in a smooth, flowing narrative style
+- Use natural paragraph breaks without any special symbols`,
         },
       ],
     }).then(res => {
@@ -220,7 +234,14 @@ async function generateWithProvider(
           },
           {
             role: 'user',
-            content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.`,
+            content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.
+
+IMPORTANT:
+- Write ONLY the letter content itself, starting with "Dear ${recipientName},"
+- Do NOT include any asterisks, stage directions, or formatting marks
+- Do NOT include headers like "A Letter for..." or "Delivered to..."
+- Do NOT use asterisks for emphasis - use natural language instead
+- Write in a natural, flowing narrative style as if speaking directly to the child`,
           },
         ],
       }),
@@ -235,7 +256,14 @@ async function generateWithProvider(
           },
           {
             role: 'user',
-            content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.`,
+            content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.
+
+IMPORTANT:
+- Write ONLY the story narrative itself
+- Do NOT include any asterisks, stage directions, or formatting marks
+- Do NOT use asterisks for emphasis or scene breaks
+- Write in a smooth, flowing narrative style
+- Use natural paragraph breaks without any special symbols`,
           },
         ],
       }),

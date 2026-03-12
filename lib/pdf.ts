@@ -152,12 +152,14 @@ function buildLetterHtml(
         .signature-section {
           margin-top: 3em;
           page-break-inside: avoid;
-          position: relative;
+          display: flex;
+          justify-content: flex-end;
+          align-items: flex-end;
+          gap: 2em;
         }
 
         .signature-block {
           text-align: right;
-          margin-bottom: 2em;
         }
 
         .signature-block img {
@@ -170,11 +172,9 @@ function buildLetterHtml(
           font-style: italic;
         }
 
-        /* Wax seal positioned absolutely at bottom-right of signature section */
+        /* Wax seal positioned next to signature */
         .wax-seal {
-          position: absolute;
-          bottom: 0;
-          right: 0;
+          flex-shrink: 0;
         }
 
         .wax-seal img {
@@ -424,17 +424,16 @@ function buildEnvelopeHtml(
             background: linear-gradient(135deg, #f5f5dc 0%, #faf6f0 100%);
           `}
           border: 3px solid ${template.accentColor};
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
 
         .recipient {
-          text-align: center;
-          font-size: 18pt;
-          line-height: 1.4;
+          position: absolute;
+          left: 3.2in; /* Position in middle third of 9.5in envelope */
+          top: 2.3in; /* Position closer to bottom of 4.125in envelope */
+          text-align: left;
+          font-size: 16pt;
+          line-height: 1.5;
           z-index: 1;
-          max-width: 60%;
         }
 
         .from {
