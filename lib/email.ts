@@ -428,11 +428,13 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
     </head>
     <body>
       <div class="container">
-        ${emailHeaderUrl ? `<img src="${emailHeaderUrl}" alt="Holiday Header" class="email-header-image" style="width: 100%; max-width: 600px; height: auto; display: block;" />` : ''}
-        <div class="header">
-          <h1>Your Magical Letter Has Arrived!</h1>
-          <p>From ${character} with Love</p>
-        </div>
+        ${emailHeaderUrl ?
+          `<img src="${emailHeaderUrl}" alt="Holiday Header" class="email-header-image" style="width: 100%; max-width: 600px; height: auto; display: block;" />` :
+          `<div class="header">
+            <h1>Your Magical Letter Has Arrived!</h1>
+            <p>From ${character} with Love</p>
+          </div>`
+        }
 
         <div class="content">
           <div class="greeting">Dear ${order.customerName || 'Friend'},</div>
