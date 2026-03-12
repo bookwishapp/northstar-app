@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import PreviewContent from './PreviewContent';
+import { ensureContentApprovalFields } from '@/lib/migrations';
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -8,6 +9,9 @@ interface Props {
 
 export default async function PreviewPage({ params }: Props) {
   const { token } = await params;
+
+  // Ensure migration is applied
+  await ensureContentApprovalFields();
 
   // Fetch the order to get the generated content
   const order = await prisma.order.findUnique({

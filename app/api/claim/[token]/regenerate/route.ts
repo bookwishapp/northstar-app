@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateContent } from '@/lib/ai';
+import { ensureContentApprovalFields } from '@/lib/migrations';
 
 /**
  * POST /api/claim/[token]/regenerate
@@ -12,6 +13,9 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
+
+    // Ensure migration is applied
+    await ensureContentApprovalFields();
 
     // Find order by claim token
     const order = await prisma.order.findUnique({
