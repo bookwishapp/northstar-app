@@ -338,14 +338,6 @@ async function continueFromPdf(orderId: string): Promise<void> {
   }
 }
 
-// /**
-//  * Continue processing after content approval
-//  * TEMPORARILY DISABLED - waiting for database migration
-//  */
-// export async function continueAfterApproval(orderId: string): Promise<void> {
-//   console.log(`Continuing order processing after approval for ${orderId}`);
-//   throw new Error('Content approval feature temporarily disabled');
-// }
 
 /**
  * Continue processing from delivery step
