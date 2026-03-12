@@ -6,7 +6,7 @@ const createProgramSchema = z.object({
   name: z.string(),
   tier: z.string(),
   deliveryTypes: z.array(z.string()),
-  productTypes: z.array(z.string()).optional(),
+  productTypes: z.array(z.string()).optional().default(['letter', 'story']),
   priceDigital: z.number().nullable(),
   pricePhysical: z.number().nullable(),
   isActive: z.boolean(),

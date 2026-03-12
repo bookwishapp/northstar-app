@@ -37,7 +37,7 @@ export default function ContentPreview({ letter, story, regenerationCount, produ
         </div>
       )}
 
-      {/* Tab Navigation - only show if both products are included */}
+      {/* Tab Navigation - only show tabs if both products are included */}
       <div className="w-full">
         {showLetter && showStory ? (
           <div className="flex border-b border-gray-200">

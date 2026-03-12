@@ -18,11 +18,16 @@ export default function CreateProgramPage() {
     if (formData.get('digital')) deliveryTypes.push('digital');
     if (formData.get('physical')) deliveryTypes.push('physical');
 
+    const productTypes = [];
+    if (formData.get('letter')) productTypes.push('letter');
+    if (formData.get('story')) productTypes.push('story');
+
     const data = {
       holidaySlug,
       name: formData.get('name'),
       tier: formData.get('tier'),
       deliveryTypes,
+      productTypes: productTypes.length > 0 ? productTypes : ['letter', 'story'], // Default to both if none selected
       priceDigital: formData.get('priceDigital') ? parseFloat(formData.get('priceDigital') as string) : null,
       pricePhysical: formData.get('pricePhysical') ? parseFloat(formData.get('pricePhysical') as string) : null,
       isActive: formData.get('isActive') === 'true',

@@ -73,7 +73,7 @@ export default function EditProgramPage() {
       name: formData.get('name'),
       tier: formData.get('tier'),
       deliveryTypes,
-      productTypes,
+      productTypes: productTypes.length > 0 ? productTypes : ['letter', 'story'], // Default to both if none selected
       priceDigital: formData.get('priceDigital') ? parseFloat(formData.get('priceDigital') as string) : null,
       pricePhysical: formData.get('pricePhysical') ? parseFloat(formData.get('pricePhysical') as string) : null,
       isActive: formData.get('isActive') === 'true',
