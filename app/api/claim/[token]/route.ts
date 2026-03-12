@@ -189,9 +189,8 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Your personalization has been received! Your letter is being created.',
+      message: 'Your personalization has been received! Check your email soon for the magical letter.',
       orderId: order.id,
-      redirectUrl: `/claim/${token}/preview`, // Redirect to preview instead of success
     });
 
   } catch (error) {

@@ -96,9 +96,8 @@ export default function ClaimForm({ token, order, template, program }: Props) {
         throw new Error(data.error || 'Failed to submit');
       }
 
-      const result = await response.json();
-      // Redirect to preview page instead of success
-      router.push(result.redirectUrl || `/claim/${token}/preview`);
+      // Redirect to success page (reverting preview feature temporarily)
+      router.push(`/claim/${token}/success`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setIsSubmitting(false);

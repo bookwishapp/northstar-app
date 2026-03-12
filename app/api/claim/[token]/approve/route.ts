@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { continueAfterApproval } from '@/lib/processor';
+// import { continueAfterApproval } from '@/lib/processor'; // Temporarily disabled
 import { ensureContentApprovalFields } from '@/lib/migrations';
 
 /**
@@ -56,15 +56,16 @@ export async function POST(
     });
 
     // Continue processing (generate PDFs and send email)
-    const processingPromise = continueAfterApproval(order.id).catch((error) => {
-      console.error(`Failed to continue processing after approval for order ${order.id}:`, error);
-    });
+    // TEMPORARILY DISABLED - waiting for database migration
+    // const processingPromise = continueAfterApproval(order.id).catch((error) => {
+    //   console.error(`Failed to continue processing after approval for order ${order.id}:`, error);
+    // });
 
     // Wait a bit for processing to start
-    await Promise.race([
-      processingPromise,
-      new Promise(resolve => setTimeout(resolve, 1000))
-    ]);
+    // await Promise.race([
+    //   processingPromise,
+    //   new Promise(resolve => setTimeout(resolve, 1000))
+    // ]);
 
     return NextResponse.json({
       success: true,

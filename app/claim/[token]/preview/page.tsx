@@ -21,8 +21,6 @@ export default async function PreviewPage({ params }: Props) {
       status: true,
       generatedLetter: true,
       generatedStory: true,
-      regenerationCount: true,
-      contentApprovedAt: true,
       recipientName: true,
       recipientAge: true,
       program: {
@@ -36,7 +34,13 @@ export default async function PreviewPage({ params }: Props) {
         },
       },
     },
-  });
+  }) as any; // Type cast to handle missing fields temporarily
+
+  // Default values for missing fields
+  if (order) {
+    order.regenerationCount = 0; // Will be tracked once migration is applied
+    order.contentApprovedAt = null; // Will be tracked once migration is applied
+  }
 
   // Handle various states
   if (!order) {

@@ -46,11 +46,11 @@ export async function processOrder(orderId: string): Promise<void> {
         data: {
           generatedLetter: content.letter,
           generatedStory: content.story,
-          status: 'pending_approval', // Changed: now needs user approval
+          status: 'pending_pdf', // Revert to original flow - no approval needed
         },
       });
 
-      console.log(`AI content generated successfully for order ${orderId}, awaiting approval`);
+      console.log(`AI content generated successfully for order ${orderId}`);
     } catch (error) {
       console.error(`Failed to generate AI content for order ${orderId}:`, error);
 
@@ -257,12 +257,7 @@ export async function retryFailedOrder(orderId: string): Promise<void> {
   let newStatus = 'pending_generation';
 
   if (order.generatedLetter && order.generatedStory) {
-    // If content exists but not approved, needs approval
-    if (!order.contentApprovedAt) {
-      newStatus = 'pending_approval';
-    } else {
-      newStatus = 'pending_pdf';
-    }
+    newStatus = 'pending_pdf';
   }
 
   if (order.letterPdfKey && order.storyPdfKey && order.envelopePdfKey) {
@@ -343,35 +338,14 @@ async function continueFromPdf(orderId: string): Promise<void> {
   }
 }
 
-/**
- * Continue processing after content approval
- */
-export async function continueAfterApproval(orderId: string): Promise<void> {
-  console.log(`Continuing order processing after approval for ${orderId}`);
-
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-  });
-
-  if (!order) {
-    throw new Error(`Order ${orderId} not found`);
-  }
-
-  if (!order.contentApprovedAt) {
-    throw new Error(`Order ${orderId} has not been approved yet`);
-  }
-
-  // Update status to pending_pdf and continue with PDF generation
-  await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      status: 'pending_pdf',
-    },
-  });
-
-  // Continue with PDF generation
-  await continueFromPdf(orderId);
-}
+// /**
+//  * Continue processing after content approval
+//  * TEMPORARILY DISABLED - waiting for database migration
+//  */
+// export async function continueAfterApproval(orderId: string): Promise<void> {
+//   console.log(`Continuing order processing after approval for ${orderId}`);
+//   throw new Error('Content approval feature temporarily disabled');
+// }
 
 /**
  * Continue processing from delivery step
