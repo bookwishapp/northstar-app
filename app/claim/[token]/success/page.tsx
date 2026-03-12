@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { prisma } from '@/lib/prisma';
+import { notFound } from 'next/navigation';
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -6,6 +8,20 @@ interface Props {
 
 export default async function ClaimSuccessPage({ params }: Props) {
   const { token } = await params;
+
+  // Fetch the order to get the actual order ID
+  const order = await prisma.order.findUnique({
+    where: { claimToken: token },
+    select: {
+      id: true,
+      claimedAt: true
+    }
+  });
+
+  // If order doesn't exist or hasn't been claimed, show not found
+  if (!order || !order.claimedAt) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4">
@@ -84,7 +100,7 @@ export default async function ClaimSuccessPage({ params }: Props) {
               Return Home
             </Link>
             <a
-              href={`/track?order=${token}`}
+              href={`/track?order=${order.id}`}
               className="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
               Track Your Order

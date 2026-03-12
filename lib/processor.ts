@@ -119,35 +119,57 @@ export async function processOrder(orderId: string): Promise<void> {
     if (updatedOrder.deliveryType === 'digital') {
       console.log(`Sending delivery email for order ${orderId}`);
 
-      try {
-        await sendDeliveryEmail(updatedOrder, {
-          letterKey: updatedOrder.letterPdfKey!,
-          storyKey: updatedOrder.storyPdfKey!,
-          envelopeKey: updatedOrder.envelopePdfKey,
-        });
+      // Retry email delivery up to 3 times with exponential backoff
+      let lastError: Error | null = null;
+      const maxRetries = 3;
 
-        // Update status to delivered
-        await prisma.order.update({
-          where: { id: orderId },
-          data: {
-            status: 'delivered',
-          },
-        });
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          await sendDeliveryEmail(updatedOrder, {
+            letterKey: updatedOrder.letterPdfKey!,
+            storyKey: updatedOrder.storyPdfKey!,
+            envelopeKey: updatedOrder.envelopePdfKey,
+          });
 
-        console.log(`Order ${orderId} delivered successfully via email`);
-      } catch (error) {
-        console.error(`Failed to send delivery email for order ${orderId}:`, error);
+          // Update status to delivered
+          await prisma.order.update({
+            where: { id: orderId },
+            data: {
+              status: 'delivered',
+            },
+          });
+
+          console.log(`Order ${orderId} delivered successfully via email on attempt ${attempt}`);
+          lastError = null;
+          break; // Success, exit retry loop
+
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error('Email delivery failed');
+          console.error(`Failed to send delivery email for order ${orderId} (attempt ${attempt}/${maxRetries}):`, error);
+
+          if (attempt < maxRetries) {
+            // Wait before retrying (exponential backoff: 2s, 4s, 8s)
+            const waitTime = Math.pow(2, attempt) * 1000;
+            console.log(`Retrying email delivery in ${waitTime/1000} seconds...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+        }
+      }
+
+      // If all retries failed, mark as failed
+      if (lastError) {
+        console.error(`All email delivery attempts failed for order ${orderId}`);
 
         // Update status to failed
         await prisma.order.update({
           where: { id: orderId },
           data: {
             status: 'failed',
-            errorMessage: error instanceof Error ? error.message : 'Email delivery failed',
+            errorMessage: `Email delivery failed after ${maxRetries} attempts: ${lastError.message}`,
           },
         });
 
-        throw error;
+        throw lastError;
       }
     } else {
       // Physical delivery via PostGrid

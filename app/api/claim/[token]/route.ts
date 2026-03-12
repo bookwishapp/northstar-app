@@ -161,10 +161,31 @@ export async function POST(
     // Import processOrder dynamically to avoid circular dependencies
     const { processOrder } = await import('@/lib/processor');
 
-    // Trigger processing in the background (don't await)
-    void processOrder(order.id).catch((error) => {
+    // Process the order with proper error handling
+    // We'll wait a bit for processing to start, but not block the response too long
+    const processingPromise = processOrder(order.id).catch((error) => {
       console.error(`Failed to process order ${order.id}:`, error);
+      // Don't throw - we've already saved the order, just log the error
+      // The retry mechanism will pick it up
     });
+
+    // Wait up to 2 seconds for processing to start successfully
+    // This ensures we catch immediate failures without blocking too long
+    await Promise.race([
+      processingPromise,
+      new Promise(resolve => setTimeout(resolve, 2000))
+    ]);
+
+    // Check if order failed immediately
+    const checkOrder = await prisma.order.findUnique({
+      where: { id: order.id },
+      select: { status: true, errorMessage: true }
+    });
+
+    if (checkOrder?.status === 'failed') {
+      console.error(`Order ${order.id} failed immediately: ${checkOrder.errorMessage}`);
+      // Still return success to user but log the failure for monitoring
+    }
 
     return NextResponse.json({
       success: true,
