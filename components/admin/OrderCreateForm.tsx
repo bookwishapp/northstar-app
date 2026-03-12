@@ -39,10 +39,24 @@ export default function OrderCreateForm({ programs }: Props) {
     setIsLoading(true);
 
     try {
+      // Only send email if it's not empty
+      const payload: any = {
+        programId: formData.programId,
+        deliveryType: formData.deliveryType,
+      };
+
+      if (formData.customerEmail.trim()) {
+        payload.customerEmail = formData.customerEmail.trim();
+      }
+
+      if (formData.externalOrderId.trim()) {
+        payload.externalOrderId = formData.externalOrderId.trim();
+      }
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
