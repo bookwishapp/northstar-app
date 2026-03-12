@@ -143,8 +143,11 @@ async function generateWithProvider(
   let storyResult: PromiseSettledResult<any>;
 
   if (provider === 'anthropic') {
-    // Using Claude 3.5 Sonnet - the latest and best model for creative writing
-    const model = 'claude-3-5-sonnet-20241022';
+    // Anthropic models for creative writing:
+    // - claude-3-5-sonnet-20241022: Best for creative writing (default)
+    // - claude-3-5-haiku-20241022: Faster, cheaper, still good
+    // - claude-3-opus-20240229: Previous best, very capable
+    const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
     console.log(`Using Anthropic model: ${model}`);
 
     const client = getAnthropicClient();
@@ -193,8 +196,13 @@ async function generateWithProvider(
     // Generate letter and story in parallel with individual error handling
     [letterResult, storyResult] = await Promise.allSettled([letterPromise, storyPromise]);
   } else {
-    // Fallback to OpenAI GPT-4
-    const model = 'gpt-4-turbo-preview';
+    // Fallback to OpenAI - use best model for creative writing
+    // Models ranked by creative writing ability:
+    // - gpt-4o: Best overall, newest model (May 2024)
+    // - gpt-4-turbo: Very good, stable
+    // - gpt-4-turbo-preview: Good but older
+    // - gpt-4: Original, still excellent
+    const model = process.env.OPENAI_MODEL || 'gpt-4o';
     console.log(`Using OpenAI model: ${model}`);
 
     // Generate letter and story in parallel using OpenAI
@@ -202,7 +210,7 @@ async function generateWithProvider(
       getOpenAIClient().chat.completions.create({
         model: model,
         max_tokens: 1000,
-        temperature: 0.9,
+        temperature: 0.95, // Slightly higher for more creativity
         messages: [
           {
             role: 'system',
@@ -217,7 +225,7 @@ async function generateWithProvider(
       getOpenAIClient().chat.completions.create({
         model: model,
         max_tokens: 1500,
-        temperature: 0.9,
+        temperature: 0.95, // Slightly higher for more creativity
         messages: [
           {
             role: 'system',
