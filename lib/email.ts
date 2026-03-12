@@ -354,6 +354,9 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
         }
         .email-header-image {
           width: 100%;
+          max-width: 600px;
+          max-height: 200px;
+          object-fit: contain;
           display: block;
         }
         .header {
@@ -426,7 +429,7 @@ export async function sendDeliveryEmail(order: any, pdfS3Keys: PdfKeys): Promise
     </head>
     <body>
       <div class="container">
-        ${emailHeaderUrl ? `<img src="${emailHeaderUrl}" alt="Email Header" class="email-header-image" />` : ''}
+        ${emailHeaderUrl ? `<img src="${emailHeaderUrl}" alt="Holiday Header" class="email-header-image" style="width: 100%; max-width: 600px; max-height: 200px; object-fit: contain; display: block;" />` : ''}
         <div class="header">
           <h1>Your Magical Letter Has Arrived!</h1>
           <p>From ${character} with Love</p>
