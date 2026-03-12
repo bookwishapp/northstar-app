@@ -56,9 +56,16 @@ export default function ClaimForm({ token, order, template, program }: Props) {
         router.refresh();
       }, 3000);
       return () => clearInterval(interval);
-    } else if (order.generatedLetter && order.generatedStory) {
+    } else if (order.status === 'pending_approval' && order.generatedLetter && order.generatedStory) {
+      // Content is ready for approval
       setIsGenerating(false);
       setShowPreview(true);
+      setIsSubmitting(false); // Clear submitting state when content is ready
+    } else if (order.generatedLetter && order.generatedStory) {
+      // Content exists
+      setIsGenerating(false);
+      setShowPreview(true);
+      setIsSubmitting(false); // Clear submitting state
     }
   }, [order.status, order.generatedLetter, order.generatedStory, router]);
 
@@ -144,12 +151,18 @@ export default function ClaimForm({ token, order, template, program }: Props) {
       } else {
         // For generate/regenerate, refresh to show loading state
         setIsGenerating(true);
+        setIsSubmitting(false); // Clear submitting state after successful request
         // Start polling for updates
         setTimeout(() => router.refresh(), 2000);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setIsSubmitting(false);
+    } finally {
+      // Ensure submitting state is cleared for non-approve actions
+      if (action !== 'approve') {
+        setTimeout(() => setIsSubmitting(false), 100);
+      }
     }
   }
 
@@ -228,7 +241,13 @@ export default function ClaimForm({ token, order, template, program }: Props) {
         </p>
       </div>
 
-      <form onSubmit={(e) => handleSubmit(e, hasContent ? 'regenerate' : 'generate')} className="p-6 space-y-6">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        // Only submit for initial generation, not when content exists
+        if (!hasContent) {
+          handleSubmit(e, 'generate');
+        }
+      }} className="p-6 space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
             {error}
@@ -519,7 +538,8 @@ export default function ClaimForm({ token, order, template, program }: Props) {
             <>
               {canRegenerate && (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={(e) => handleSubmit(e, 'regenerate')}
                   disabled={isSubmitting}
                   className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
