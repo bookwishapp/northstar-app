@@ -29,12 +29,19 @@ function getAnthropicClient(): Anthropic {
       ? `${apiKey.substring(0, 7)}...${apiKey.substring(apiKey.length - 4)}`
       : 'KEY_TOO_SHORT';
     console.log(`Initializing Anthropic client with API key: ${keyPreview}`);
+    console.log(`API Key length: ${apiKey.length} characters`);
 
-    anthropicClient = new Anthropic({
-      apiKey: apiKey,
-      timeout: 30000, // 30 second timeout
-      maxRetries: 2, // Retry up to 2 times on network errors
-    });
+    try {
+      anthropicClient = new Anthropic({
+        apiKey: apiKey,
+        timeout: 30000, // 30 second timeout
+        maxRetries: 2, // Retry up to 2 times on network errors
+      });
+      console.log('Anthropic client initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Anthropic client:', error);
+      throw error;
+    }
   }
   return anthropicClient;
 }
@@ -121,8 +128,160 @@ function getLetterDate(template: any): string {
 /**
  * Generate personalized letter and story content using Anthropic's Claude
  */
+async function generateWithProvider(
+  provider: 'anthropic' | 'openai',
+  orderId: string,
+  recipientName: string,
+  recipientAge: number | null,
+  processedLetterPrompt: string,
+  processedStoryPrompt: string
+): Promise<GeneratedContent> {
+  console.log(`Attempting generation with provider: ${provider}`);
+  const startTime = Date.now();
+
+  let letterResult: PromiseSettledResult<any>;
+  let storyResult: PromiseSettledResult<any>;
+
+  if (provider === 'anthropic') {
+    // Using Claude 3.5 Sonnet - the latest and best model for creative writing
+    const model = 'claude-3-5-sonnet-20241022';
+    console.log(`Using Anthropic model: ${model}`);
+
+    const client = getAnthropicClient();
+    console.log('Anthropic client obtained, starting API calls...');
+
+    // Create the API call promises with additional logging
+    const letterPromise = client.messages.create({
+      model: model,
+      max_tokens: 1000,
+      temperature: 0.9,
+      system: processedLetterPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.`,
+        },
+      ],
+    }).then(res => {
+      console.log('Letter generation completed');
+      return res;
+    }).catch(err => {
+      console.error('Letter generation failed:', err);
+      throw err;
+    });
+
+    const storyPromise = client.messages.create({
+      model: model,
+      max_tokens: 1500,
+      temperature: 0.9,
+      system: processedStoryPrompt,
+      messages: [
+        {
+          role: 'user',
+          content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.`,
+        },
+      ],
+    }).then(res => {
+      console.log('Story generation completed');
+      return res;
+    }).catch(err => {
+      console.error('Story generation failed:', err);
+      throw err;
+    });
+
+    console.log('Waiting for both generations to complete...');
+    // Generate letter and story in parallel with individual error handling
+    [letterResult, storyResult] = await Promise.allSettled([letterPromise, storyPromise]);
+  } else {
+    // Fallback to OpenAI GPT-4
+    const model = 'gpt-4-turbo-preview';
+    console.log(`Using OpenAI model: ${model}`);
+
+    // Generate letter and story in parallel using OpenAI
+    [letterResult, storyResult] = await Promise.allSettled([
+      getOpenAIClient().chat.completions.create({
+        model: model,
+        max_tokens: 1000,
+        temperature: 0.9,
+        messages: [
+          {
+            role: 'system',
+            content: processedLetterPrompt,
+          },
+          {
+            role: 'user',
+            content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.`,
+          },
+        ],
+      }),
+      getOpenAIClient().chat.completions.create({
+        model: model,
+        max_tokens: 1500,
+        temperature: 0.9,
+        messages: [
+          {
+            role: 'system',
+            content: processedStoryPrompt,
+          },
+          {
+            role: 'user',
+            content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.`,
+          },
+        ],
+      }),
+    ]);
+  }
+
+  const generationTime = Date.now() - startTime;
+  console.log(`AI generation completed in ${generationTime}ms`);
+
+  // Check for failures
+  if (letterResult.status === 'rejected') {
+    console.error('Letter generation failed:', letterResult.reason);
+    throw new Error(`Letter generation failed: ${letterResult.reason}`);
+  }
+  if (storyResult.status === 'rejected') {
+    console.error('Story generation failed:', storyResult.reason);
+    throw new Error(`Story generation failed: ${storyResult.reason}`);
+  }
+
+  const letterResponse = letterResult.value;
+  const storyResponse = storyResult.value;
+
+  let letter: string = '';
+  let story: string = '';
+
+  if (provider === 'anthropic') {
+    // Extract text from Claude's response format
+    letter = letterResponse.content[0].type === 'text'
+      ? letterResponse.content[0].text
+      : '';
+    story = storyResponse.content[0].type === 'text'
+      ? storyResponse.content[0].text
+      : '';
+  } else {
+    // Extract text from OpenAI's response format
+    letter = letterResponse.choices[0]?.message?.content || '';
+    story = storyResponse.choices[0]?.message?.content || '';
+  }
+
+  if (!letter || !story) {
+    throw new Error(`Failed to generate content from ${provider}`);
+  }
+
+  console.log(`Content generated successfully for order ${orderId}`);
+  console.log(`Letter length: ${letter.length} chars`);
+  console.log(`Story length: ${story.length} chars`);
+  console.log(`Provider used: ${provider}`);
+
+  return {
+    letter: letter.trim(),
+    story: story.trim(),
+  };
+}
+
 export async function generateContent(orderId: string): Promise<GeneratedContent> {
-  console.log(`Generating content for order ${orderId} using Claude Sonnet...`);
+  console.log(`Generating content for order ${orderId}...`);
 
   const order = await getOrderWithTemplate(orderId);
   const { program: { template }, recipientName, recipientAge, recipientDetails } = order;
@@ -145,163 +304,69 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
   const processedLetterPrompt = processPromptTemplate(template.letterPrompt, context);
   const processedStoryPrompt = processPromptTemplate(template.storyPrompt, context);
 
-  try {
-    const provider = getAIProvider();
-    console.log(`Using AI provider: ${provider}`);
+  // Log prompt sizes for debugging
+  console.log(`Letter prompt length: ${processedLetterPrompt.length} chars`);
+  console.log(`Story prompt length: ${processedStoryPrompt.length} chars`);
 
-    // Log prompt sizes for debugging
-    console.log(`Letter prompt length: ${processedLetterPrompt.length} chars`);
-    console.log(`Story prompt length: ${processedStoryPrompt.length} chars`);
+  // Try Anthropic first if available
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      console.log('Attempting generation with Anthropic...');
+      return await generateWithProvider(
+        'anthropic',
+        orderId,
+        recipientName,
+        recipientAge,
+        processedLetterPrompt,
+        processedStoryPrompt
+      );
+    } catch (anthropicError: any) {
+      console.error('Anthropic generation failed, checking fallback options...', anthropicError);
 
-    console.log('Starting parallel AI generation...');
-    const startTime = Date.now();
-
-    let letterResult: PromiseSettledResult<any>;
-    let storyResult: PromiseSettledResult<any>;
-
-    if (provider === 'anthropic') {
-      // Using Claude 3.5 Sonnet - the latest and best model for creative writing
-      const model = 'claude-3-5-sonnet-20241022';
-      console.log(`Using Anthropic model: ${model}`);
-
-      // Generate letter and story in parallel with individual error handling
-      [letterResult, storyResult] = await Promise.allSettled([
-        getAnthropicClient().messages.create({
-          model: model,
-          max_tokens: 1000,
-          temperature: 0.9,
-          system: processedLetterPrompt,
-          messages: [
-            {
-              role: 'user',
-              content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.`,
-            },
-          ],
-        }),
-        getAnthropicClient().messages.create({
-          model: model,
-          max_tokens: 1500,
-          temperature: 0.9,
-          system: processedStoryPrompt,
-          messages: [
-            {
-              role: 'user',
-              content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.`,
-            },
-          ],
-        }),
-      ]);
-    } else {
-      // Fallback to OpenAI GPT-4
-      const model = 'gpt-4-turbo-preview';
-      console.log(`Using OpenAI model: ${model} (fallback)`);
-
-      // Generate letter and story in parallel using OpenAI
-      [letterResult, storyResult] = await Promise.allSettled([
-        getOpenAIClient().chat.completions.create({
-          model: model,
-          max_tokens: 1000,
-          temperature: 0.9,
-          messages: [
-            {
-              role: 'system',
-              content: processedLetterPrompt,
-            },
-            {
-              role: 'user',
-              content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.`,
-            },
-          ],
-        }),
-        getOpenAIClient().chat.completions.create({
-          model: model,
-          max_tokens: 1500,
-          temperature: 0.9,
-          messages: [
-            {
-              role: 'system',
-              content: processedStoryPrompt,
-            },
-            {
-              role: 'user',
-              content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.`,
-            },
-          ],
-        }),
-      ]);
-    }
-
-    const generationTime = Date.now() - startTime;
-    console.log(`AI generation completed in ${generationTime}ms`);
-
-    // Check for failures
-    if (letterResult.status === 'rejected') {
-      console.error('Letter generation failed:', letterResult.reason);
-      throw new Error(`Letter generation failed: ${letterResult.reason}`);
-    }
-    if (storyResult.status === 'rejected') {
-      console.error('Story generation failed:', storyResult.reason);
-      throw new Error(`Story generation failed: ${storyResult.reason}`);
-    }
-
-    const letterResponse = letterResult.value;
-    const storyResponse = storyResult.value;
-
-    let letter: string = '';
-    let story: string = '';
-
-    if (provider === 'anthropic') {
-      // Extract text from Claude's response format
-      letter = letterResponse.content[0].type === 'text'
-        ? letterResponse.content[0].text
-        : '';
-      story = storyResponse.content[0].type === 'text'
-        ? storyResponse.content[0].text
-        : '';
-    } else {
-      // Extract text from OpenAI's response format
-      letter = letterResponse.choices[0]?.message?.content || '';
-      story = storyResponse.choices[0]?.message?.content || '';
-    }
-
-    if (!letter || !story) {
-      throw new Error(`Failed to generate content from ${provider}`);
-    }
-
-    console.log(`Content generated successfully for order ${orderId}`);
-    console.log(`Letter length: ${letter.length} chars`);
-    console.log(`Story length: ${story.length} chars`);
-    console.log(`Provider used: ${provider}`);
-
-    return {
-      letter: letter.trim(),
-      story: story.trim(),
-    };
-  } catch (error) {
-    console.error('Anthropic generation failed:', error);
-
-    // Log specific error details for debugging
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-      });
-
-      // Check for specific Anthropic errors
-      if (error.message.includes('timeout')) {
-        throw new Error('AI generation timed out after 30 seconds. Please try again.');
-      }
-      if (error.message.includes('rate_limit')) {
-        throw new Error('AI rate limit exceeded. Please wait a moment and try again.');
-      }
-      if (error.message.includes('api_key')) {
-        throw new Error('AI API key configuration error. Please contact support.');
+      // Check if we should fallback to OpenAI
+      if (process.env.OPENAI_API_KEY) {
+        console.log('Falling back to OpenAI due to Anthropic error...');
+        try {
+          return await generateWithProvider(
+            'openai',
+            orderId,
+            recipientName,
+            recipientAge,
+            processedLetterPrompt,
+            processedStoryPrompt
+          );
+        } catch (openaiError) {
+          console.error('OpenAI fallback also failed:', openaiError);
+          // Throw the original Anthropic error since that was the primary provider
+          throw anthropicError;
+        }
+      } else {
+        // No OpenAI fallback available, throw the Anthropic error
+        throw anthropicError;
       }
     }
-
-    throw new Error(`Failed to generate AI content: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+
+  // No Anthropic key, try OpenAI
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      console.log('Using OpenAI (no Anthropic key available)...');
+      return await generateWithProvider(
+        'openai',
+        orderId,
+        recipientName,
+        recipientAge,
+        processedLetterPrompt,
+        processedStoryPrompt
+      );
+    } catch (error: any) {
+      console.error('OpenAI generation failed:', error);
+      throw error;
+    }
+  }
+
+  // No API keys available
+  throw new Error('No AI API key configured. Please set either ANTHROPIC_API_KEY or OPENAI_API_KEY');
 }
 
 /**
