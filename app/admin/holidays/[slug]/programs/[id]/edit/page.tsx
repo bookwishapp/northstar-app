@@ -20,15 +20,8 @@ interface Program {
   };
 }
 
-interface Template {
-  id: string;
-  name: string;
-  character: string;
-}
-
 export default function EditProgramPage() {
   const [program, setProgram] = useState<Program | null>(null);
-  const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
@@ -48,12 +41,6 @@ export default function EditProgramPage() {
         alert('Failed to load program');
         setIsLoading(false);
       });
-
-    // Fetch available templates
-    fetch('/api/admin/templates')
-      .then(res => res.json())
-      .then(data => setTemplates(data.templates || []))
-      .catch(() => console.error('Failed to load templates'));
   }, [programId]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -77,7 +64,6 @@ export default function EditProgramPage() {
       priceDigital: formData.get('priceDigital') ? parseFloat(formData.get('priceDigital') as string) : null,
       pricePhysical: formData.get('pricePhysical') ? parseFloat(formData.get('pricePhysical') as string) : null,
       isActive: formData.get('isActive') === 'true',
-      templateId: formData.get('templateId'),
     };
 
     try {
@@ -159,26 +145,6 @@ export default function EditProgramPage() {
               <option value="basic">Basic</option>
               <option value="premium">Premium</option>
               <option value="deluxe">Deluxe</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="templateId" className="block text-sm font-medium text-gray-700">
-              Template
-            </label>
-            <select
-              name="templateId"
-              id="templateId"
-              defaultValue={program.templateId}
-              required
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
-            >
-              <option value="">Select a template</option>
-              {templates.map(template => (
-                <option key={template.id} value={template.id}>
-                  {template.name} ({template.character})
-                </option>
-              ))}
             </select>
           </div>
 
