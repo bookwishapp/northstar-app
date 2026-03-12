@@ -151,8 +151,8 @@ function buildLetterHtml(
         }
 
         .header img {
-          max-width: 90%;
-          max-height: 225px; /* Increased by 50% from 150px */
+          max-width: 98%;  /* Increased from 90% - gets much closer to side margins */
+          max-height: 275px; /* Increased from 225px - moderate height increase */
           width: auto;
           height: auto;
         }
