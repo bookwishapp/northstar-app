@@ -75,6 +75,7 @@ export async function GET(
       program: {
         name: order.program.name,
         tier: order.program.tier,
+        productTypes: order.program.productTypes,
       },
     });
 

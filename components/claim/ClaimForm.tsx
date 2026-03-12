@@ -37,6 +37,7 @@ interface Props {
   program: {
     name: string;
     tier: string;
+    productTypes?: string[];
   };
 }
 
@@ -229,8 +230,18 @@ export default function ClaimForm({ token, order, template, program }: Props) {
   }
 
   return (
-    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-red-600 to-green-600 text-white p-6">
+    <div>
+      {/* Logo */}
+      <div className="text-center mb-8">
+        <img
+          src="/images/logo.png"
+          alt="North Star Postal"
+          className="h-32 w-auto mx-auto"
+        />
+      </div>
+
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-red-600 to-green-600 text-white p-6">
         <h1 className="text-2xl font-bold">
           {hasContent ? 'Review & Personalize Your Letter' : `Personalize Your ${holidayName} Letter`}
         </h1>
@@ -532,6 +543,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
             letter={order.generatedLetter!}
             story={order.generatedStory!}
             regenerationCount={regenerationCount}
+            productTypes={program.productTypes || ['letter', 'story']}
           />
         )}
 
@@ -570,6 +582,7 @@ export default function ClaimForm({ token, order, template, program }: Props) {
           )}
         </div>
       </form>
+    </div>
     </div>
   );
 }
