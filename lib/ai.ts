@@ -6,11 +6,22 @@ let anthropicClient: Anthropic | null = null;
 
 function getAnthropicClient(): Anthropic {
   if (!anthropicClient) {
-    if (!process.env.ANTHROPIC_API_KEY) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error('ANTHROPIC_API_KEY is not set in environment variables');
       throw new Error('ANTHROPIC_API_KEY not configured in environment variables');
     }
+
+    // Log key info for debugging (first/last few chars only for security)
+    const keyPreview = apiKey.length > 10
+      ? `${apiKey.substring(0, 7)}...${apiKey.substring(apiKey.length - 4)}`
+      : 'KEY_TOO_SHORT';
+    console.log(`Initializing Anthropic client with API key: ${keyPreview}`);
+
     anthropicClient = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: apiKey,
+      timeout: 30000, // 30 second timeout
+      maxRetries: 2, // Retry up to 2 times on network errors
     });
   }
   return anthropicClient;
@@ -110,8 +121,15 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
     const model = 'claude-3-5-sonnet-20241022';
     console.log(`Using Anthropic model: ${model}`);
 
-    // Generate letter and story in parallel
-    const [letterResponse, storyResponse] = await Promise.all([
+    // Log prompt sizes for debugging
+    console.log(`Letter prompt length: ${processedLetterPrompt.length} chars`);
+    console.log(`Story prompt length: ${processedStoryPrompt.length} chars`);
+
+    console.log('Starting parallel AI generation...');
+    const startTime = Date.now();
+
+    // Generate letter and story in parallel with individual error handling
+    const [letterResult, storyResult] = await Promise.allSettled([
       getAnthropicClient().messages.create({
         model: model,
         max_tokens: 1000,
@@ -137,6 +155,22 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
         ],
       }),
     ]);
+
+    const generationTime = Date.now() - startTime;
+    console.log(`AI generation completed in ${generationTime}ms`);
+
+    // Check for failures
+    if (letterResult.status === 'rejected') {
+      console.error('Letter generation failed:', letterResult.reason);
+      throw new Error(`Letter generation failed: ${letterResult.reason}`);
+    }
+    if (storyResult.status === 'rejected') {
+      console.error('Story generation failed:', storyResult.reason);
+      throw new Error(`Story generation failed: ${storyResult.reason}`);
+    }
+
+    const letterResponse = letterResult.value;
+    const storyResponse = storyResult.value;
 
     // Extract text from Claude's response format
     const letter = letterResponse.content[0].type === 'text'
@@ -169,6 +203,17 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
         name: error.name,
         stack: error.stack,
       });
+
+      // Check for specific Anthropic errors
+      if (error.message.includes('timeout')) {
+        throw new Error('AI generation timed out after 30 seconds. Please try again.');
+      }
+      if (error.message.includes('rate_limit')) {
+        throw new Error('AI rate limit exceeded. Please wait a moment and try again.');
+      }
+      if (error.message.includes('api_key')) {
+        throw new Error('AI API key configuration error. Please contact support.');
+      }
     }
 
     throw new Error(`Failed to generate AI content: ${error instanceof Error ? error.message : 'Unknown error'}`);

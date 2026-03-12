@@ -38,7 +38,15 @@ export async function processOrder(orderId: string): Promise<void> {
     console.log(`Generating AI content for order ${orderId}`);
 
     try {
-      const content = await generateContent(orderId);
+      // Add a hard timeout of 45 seconds for AI generation
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('AI generation timeout after 45 seconds')), 45000);
+      });
+
+      const content = await Promise.race([
+        generateContent(orderId),
+        timeoutPromise
+      ]);
 
       // Update order with generated content
       await prisma.order.update({
@@ -54,12 +62,24 @@ export async function processOrder(orderId: string): Promise<void> {
     } catch (error) {
       console.error(`Failed to generate AI content for order ${orderId}:`, error);
 
+      // Provide more specific error messages
+      let errorMessage = 'AI generation failed';
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          errorMessage = 'Content generation timed out. Please try again.';
+        } else if (error.message.includes('API key')) {
+          errorMessage = 'AI service configuration error. Please contact support.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       // Update status to failed
       await prisma.order.update({
         where: { id: orderId },
         data: {
           status: 'failed',
-          errorMessage: error instanceof Error ? error.message : 'AI generation failed',
+          errorMessage: errorMessage,
         },
       });
 
