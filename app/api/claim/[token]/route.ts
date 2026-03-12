@@ -32,21 +32,40 @@ export async function GET(
       );
     }
 
-    // Check if already claimed
-    if (order.claimedAt) {
+    // Check if already delivered (but allow if in approval/generation state)
+    if (order.status === 'delivered' || order.status === 'pending_delivery' || order.status === 'pending_pdf') {
       return NextResponse.json(
-        { error: 'This order has already been claimed' },
+        { error: 'This order has already been processed' },
         { status: 404 }
       );
     }
 
+    // Get regeneration count from recipientDetails if it exists
+    const recipientDetails = order.recipientDetails as any || {};
+    const regenerationCount = recipientDetails._regenerationCount || 0;
+
     // Return order data for claim form
     return NextResponse.json({
       order: {
+        id: order.id,
         recipientName: order.recipientName,
         holidaySlug: order.holidaySlug,
         programId: order.programId,
         deliveryType: order.deliveryType,
+        status: order.status,
+        // Include existing form data if already filled
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        recipientAge: order.recipientAge,
+        recipientDetails: order.recipientDetails,
+        recipientAddress: order.recipientAddress,
+        deliveryAddress: order.deliveryAddress,
+        emailConsent: order.emailConsent,
+        // Include generated content if it exists
+        generatedLetter: order.generatedLetter,
+        generatedStory: order.generatedStory,
+        regenerationCount: regenerationCount,
+        claimedAt: order.claimedAt,
       },
       template: {
         character: order.program.template.character,
@@ -79,6 +98,7 @@ const addressSchema = z.object({
 });
 
 const claimSchema = z.object({
+  action: z.enum(['generate', 'regenerate', 'approve']).optional().default('generate'),
   customerName: z.string().min(1),
   recipientName: z.string().min(1),
   recipientAge: z.number().int().min(1).max(100),
@@ -123,10 +143,105 @@ export async function POST(
       );
     }
 
+    // Handle different actions
+    if (validatedData.action === 'approve') {
+      // Check if content exists to approve
+      if (!order.generatedLetter || !order.generatedStory) {
+        return NextResponse.json(
+          { error: 'No content to approve yet' },
+          { status: 400 }
+        );
+      }
+
+      console.log(`Order ${order.id} approved by customer`);
+
+      // Update status to proceed with PDF generation
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          status: 'pending_pdf',
+        },
+      });
+
+      // Import processor to continue
+      const { continueFromPdf } = await import('@/lib/processor');
+
+      // Continue with PDF generation in background
+      continueFromPdf(order.id).catch((error) => {
+        console.error(`Failed to continue processing after approval for order ${order.id}:`, error);
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Content approved! Your letter will be sent shortly.',
+        orderId: order.id,
+      });
+    }
+
+    // Handle regenerate action
+    if (validatedData.action === 'regenerate') {
+      // Check regeneration limit
+      const currentDetails = order.recipientDetails as any || {};
+      const regenerationCount = currentDetails._regenerationCount || 0;
+
+      if (regenerationCount >= 3) {
+        return NextResponse.json(
+          { error: 'Maximum regeneration limit reached (3 times)' },
+          { status: 400 }
+        );
+      }
+
+      console.log(`Order ${order.id} regeneration requested (attempt ${regenerationCount + 1})`);
+
+      // Update order with new details and increment regeneration count
+      const newRecipientDetails = {
+        ...(validatedData.recipientDetails || {}),
+        _regenerationCount: regenerationCount + 1,
+        _lastRegeneratedAt: new Date().toISOString(),
+      };
+
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          customerName: validatedData.customerName,
+          customerEmail: validatedData.deliveryEmail,
+          recipientName: validatedData.recipientName,
+          recipientAge: validatedData.recipientAge,
+          recipientDetails: newRecipientDetails,
+          recipientAddress: validatedData.recipientAddress,
+          deliveryAddress: validatedData.deliveryAddress || undefined,
+          emailConsent: validatedData.emailConsent,
+          generatedLetter: null, // Clear old content
+          generatedStory: null,
+          status: 'pending_generation',
+        },
+      });
+
+      // Generate new content
+      const { processOrder } = await import('@/lib/processor');
+      const processingPromise = processOrder(order.id).catch((error) => {
+        console.error(`Failed to regenerate content for order ${order.id}:`, error);
+      });
+
+      // Wait a bit for generation to start
+      await Promise.race([
+        processingPromise,
+        new Promise(resolve => setTimeout(resolve, 2000))
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Regenerating content with updated details...',
+        orderId: order.id,
+        regenerationCount: regenerationCount + 1,
+      });
+    }
+
+    // Default action: generate (first time)
     // Check if already claimed
-    if (order.claimedAt) {
+    if (order.claimedAt && order.generatedLetter) {
       return NextResponse.json(
-        { error: 'This order has already been claimed' },
+        { error: 'This order has already been personalized' },
         { status: 400 }
       );
     }
@@ -162,34 +277,19 @@ export async function POST(
     const { processOrder } = await import('@/lib/processor');
 
     // Process the order with proper error handling
-    // We'll wait a bit for processing to start, but not block the response too long
     const processingPromise = processOrder(order.id).catch((error) => {
       console.error(`Failed to process order ${order.id}:`, error);
-      // Don't throw - we've already saved the order, just log the error
-      // The retry mechanism will pick it up
     });
 
     // Wait up to 2 seconds for processing to start successfully
-    // This ensures we catch immediate failures without blocking too long
     await Promise.race([
       processingPromise,
       new Promise(resolve => setTimeout(resolve, 2000))
     ]);
 
-    // Check if order failed immediately
-    const checkOrder = await prisma.order.findUnique({
-      where: { id: order.id },
-      select: { status: true, errorMessage: true }
-    });
-
-    if (checkOrder?.status === 'failed') {
-      console.error(`Order ${order.id} failed immediately: ${checkOrder.errorMessage}`);
-      // Still return success to user but log the failure for monitoring
-    }
-
     return NextResponse.json({
       success: true,
-      message: 'Your personalization has been received! Check your email soon for the magical letter.',
+      message: 'Generating your personalized letter...',
       orderId: order.id,
     });
 

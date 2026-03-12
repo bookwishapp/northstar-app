@@ -46,11 +46,11 @@ export async function processOrder(orderId: string): Promise<void> {
         data: {
           generatedLetter: content.letter,
           generatedStory: content.story,
-          status: 'pending_pdf', // Revert to original flow - no approval needed
+          status: 'pending_approval', // Stop here for user review
         },
       });
 
-      console.log(`AI content generated successfully for order ${orderId}`);
+      console.log(`AI content generated successfully for order ${orderId}, awaiting user approval`);
     } catch (error) {
       console.error(`Failed to generate AI content for order ${orderId}:`, error);
 
@@ -288,7 +288,7 @@ export async function retryFailedOrder(orderId: string): Promise<void> {
 /**
  * Continue processing from PDF generation step
  */
-async function continueFromPdf(orderId: string): Promise<void> {
+export async function continueFromPdf(orderId: string): Promise<void> {
   console.log(`Continuing order processing from PDF generation for ${orderId}`);
 
   const order = await prisma.order.findUnique({
