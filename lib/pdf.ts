@@ -73,10 +73,31 @@ function buildLetterHtml(
   assets: any,
   template: any
 ): string {
-  const letterParagraphs = order.generatedLetter
+  // Split letter into paragraphs
+  const paragraphs = order.generatedLetter
     .split('\n\n')
-    .map((p: string) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
-    .join('');
+    .map((p: string) => p.replace(/\n/g, '<br>'));
+
+  // If we have more than 3 paragraphs, wrap the last 2 paragraphs with signature
+  // This ensures they stay together on the same page
+  let letterContent = '';
+  if (paragraphs.length > 3) {
+    // All paragraphs except the last 2
+    const mainParagraphs = paragraphs.slice(0, -2)
+      .map((p: string) => `<p>${p}</p>`)
+      .join('');
+
+    // Last 2 paragraphs - will be kept with signature
+    const lastParagraphs = paragraphs.slice(-2)
+      .map((p: string) => `<p>${p}</p>`)
+      .join('');
+
+    letterContent = mainParagraphs + `<div class="keep-together">${lastParagraphs}`;
+  } else {
+    // If 3 or fewer paragraphs, wrap them all
+    letterContent = `<div class="keep-together">` +
+      paragraphs.map((p: string) => `<p>${p}</p>`).join('');
+  }
 
   return `
     <!DOCTYPE html>
@@ -145,8 +166,19 @@ function buildLetterHtml(
           margin-bottom: 1.2em;
           text-align: justify;
           page-break-inside: avoid;
-          orphans: 3;
-          widows: 3;
+          orphans: 4;
+          widows: 4;
+        }
+
+        /* Keep last content and signature together */
+        .keep-together {
+          page-break-inside: avoid;
+          min-height: 200px; /* Ensures substantial content on last page */
+        }
+
+        .keep-together p {
+          margin-bottom: 1.2em;
+          text-align: justify;
         }
 
         .signature-section {
@@ -194,10 +226,9 @@ function buildLetterHtml(
         ` : ''}
 
         <div class="letter-body">
-          ${letterParagraphs}
-        </div>
+          ${letterContent}
 
-        <div class="signature-section">
+          <div class="signature-section">
           <div class="signature-block">
             ${assets.signatureDataUri ? `
               <img src="${assets.signatureDataUri}" alt="${template.character}">
@@ -212,6 +243,7 @@ function buildLetterHtml(
             </div>
           ` : ''}
         </div>
+        </div> <!-- Close keep-together -->
       </div>
     </body>
     </html>
@@ -304,8 +336,8 @@ function buildStoryHtml(
           text-align: justify;
           text-indent: 2em;
           page-break-inside: avoid;
-          orphans: 3;
-          widows: 3;
+          orphans: 4;
+          widows: 4;
         }
 
         .story-body p:first-of-type {
