@@ -1,16 +1,19 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { processPromptTemplate, buildPromptContext } from '@/lib/prompt-template';
 
-// Lazy initialization of OpenAI client
-let openaiClient: OpenAI | null = null;
+// Lazy initialization of Anthropic client
+let anthropicClient: Anthropic | null = null;
 
-function getOpenAIClient(): OpenAI {
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+function getAnthropicClient(): Anthropic {
+  if (!anthropicClient) {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY not configured in environment variables');
+    }
+    anthropicClient = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
   }
-  return openaiClient;
+  return anthropicClient;
 }
 
 interface RecipientDetails {
@@ -76,10 +79,10 @@ function getLetterDate(template: any): string {
 }
 
 /**
- * Generate personalized letter and story content using OpenAI
+ * Generate personalized letter and story content using Anthropic's Claude
  */
 export async function generateContent(orderId: string): Promise<GeneratedContent> {
-  console.log(`Generating content for order ${orderId}...`);
+  console.log(`Generating content for order ${orderId} using Claude Sonnet...`);
 
   const order = await getOrderWithTemplate(orderId);
   const { program: { template }, recipientName, recipientAge, recipientDetails } = order;
@@ -103,57 +106,71 @@ export async function generateContent(orderId: string): Promise<GeneratedContent
   const processedStoryPrompt = processPromptTemplate(template.storyPrompt, context);
 
   try {
+    // Using Claude 3.5 Sonnet - the latest and best model for creative writing
+    const model = 'claude-3-5-sonnet-20241022';
+    console.log(`Using Anthropic model: ${model}`);
+
     // Generate letter and story in parallel
     const [letterResponse, storyResponse] = await Promise.all([
-      getOpenAIClient().chat.completions.create({
-        model: 'gpt-4o',
+      getAnthropicClient().messages.create({
+        model: model,
+        max_tokens: 1000,
+        temperature: 0.9,
+        system: processedLetterPrompt,
         messages: [
           {
-            role: 'system',
-            content: processedLetterPrompt,
-          },
-          {
             role: 'user',
-            content: `Generate a personalized letter for ${recipientName}.`,
+            content: `Generate a personalized, heartwarming letter for ${recipientName}. Make it magical, engaging, and age-appropriate for a ${recipientAge || 'young'} year old. Include specific details that make it feel truly personal.`,
           },
         ],
-        temperature: 0.9,
-        max_tokens: 800,
       }),
-      getOpenAIClient().chat.completions.create({
-        model: 'gpt-4o',
+      getAnthropicClient().messages.create({
+        model: model,
+        max_tokens: 1500,
+        temperature: 0.9,
+        system: processedStoryPrompt,
         messages: [
           {
-            role: 'system',
-            content: processedStoryPrompt,
-          },
-          {
             role: 'user',
-            content: `Generate a personalized story featuring ${recipientName}.`,
+            content: `Generate a captivating, personalized story featuring ${recipientName} as the main character. Make it adventurous, magical, and age-appropriate for a ${recipientAge || 'young'} year old. Include vivid descriptions and engaging plot that will capture their imagination.`,
           },
         ],
-        temperature: 0.9,
-        max_tokens: 1200,
       }),
     ]);
 
-    const letter = letterResponse.choices[0]?.message?.content;
-    const story = storyResponse.choices[0]?.message?.content;
+    // Extract text from Claude's response format
+    const letter = letterResponse.content[0].type === 'text'
+      ? letterResponse.content[0].text
+      : '';
+    const story = storyResponse.content[0].type === 'text'
+      ? storyResponse.content[0].text
+      : '';
 
     if (!letter || !story) {
-      throw new Error('Failed to generate content from OpenAI');
+      throw new Error('Failed to generate content from Claude');
     }
 
     console.log(`Content generated successfully for order ${orderId}`);
     console.log(`Letter length: ${letter.length} chars`);
     console.log(`Story length: ${story.length} chars`);
+    console.log(`Model used: ${model}`);
 
     return {
       letter: letter.trim(),
       story: story.trim(),
     };
   } catch (error) {
-    console.error('OpenAI generation failed:', error);
+    console.error('Anthropic generation failed:', error);
+
+    // Log specific error details for debugging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      });
+    }
+
     throw new Error(`Failed to generate AI content: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
