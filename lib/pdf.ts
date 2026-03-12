@@ -78,8 +78,6 @@ function buildLetterHtml(
     .map((p: string) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
     .join('');
 
-  const formattedRecipientAddress = formatRecipientAddress(order.recipientAddress);
-
   return `
     <!DOCTYPE html>
     <html>
@@ -92,53 +90,24 @@ function buildLetterHtml(
 
         @page {
           size: ${template.paperSize};
-          margin: 0;
+          margin: ${template.marginTop} ${template.marginRight} ${template.marginBottom} ${template.marginLeft};
         }
 
         body {
           font-family: '${template.fontFamily}', serif;
           color: ${template.primaryColor};
           font-size: 14px;
-          line-height: 1.6;
-        }
-
-        /*
-         * MARGIN BEHAVIOR DOCUMENTATION:
-         *
-         * Template margins (marginTop, marginBottom, marginLeft, marginRight) are applied
-         * via padding on the .page container. This creates a content area where text and
-         * images are rendered.
-         *
-         * ELEMENTS THAT RESPECT MARGINS (positioned within the content area):
-         * - .header and header images (logo/letterhead)
-         * - .recipient-address (recipient's mailing address)
-         * - .letter-body (letter text content)
-         * - .signature-block (signature image or character name)
-         *
-         * DECORATIVE ELEMENTS THAT IGNORE MARGINS (fill entire page):
-         * - .page-background: Uses position:fixed with top:0, left:0, width:100%, height:100vh
-         *   to cover the entire page regardless of content margins. Background images and
-         *   patterns extend edge-to-edge for full visual coverage.
-         *
-         * SPECIAL POSITIONING:
-         * - .wax-seal: Uses position:fixed with bottom and right values set to the template
-         *   margins. This positions it at the edge of the content area (inside the margin),
-         *   not at the page edge.
-         */
-        .page {
-          width: 100%;
-          min-height: 100vh;
+          line-height: 1.8;
           position: relative;
-          padding: ${template.marginTop} ${template.marginRight} ${template.marginBottom} ${template.marginLeft};
-          page-break-after: always;
         }
 
+        /* Background that spans full page */
         .page-background {
           position: fixed;
           top: 0;
           left: 0;
-          width: 100%;
-          height: 100vh;
+          right: 0;
+          bottom: 0;
           z-index: -1;
           ${assets.backgroundDataUri ? `
             background-image: url('${assets.backgroundDataUri}');
@@ -148,29 +117,23 @@ function buildLetterHtml(
           ` : ''}
         }
 
-        .header {
-          text-align: center;
-          margin-bottom: 2em;
+        /* Content flows naturally, no page wrapper */
+        .content {
+          position: relative;
+          z-index: 1;
         }
 
-        .header-image {
-          width: 100%;
-          max-width: 400px;
+        .header {
+          text-align: center;
+          margin-bottom: 3em;
+          page-break-after: avoid;
         }
 
         .header img {
-          max-width: 80%;
-          max-height: 150px;
+          max-width: 90%;
+          max-height: 225px; /* Increased by 50% from 150px */
           width: auto;
           height: auto;
-        }
-
-        .recipient-address {
-          margin-bottom: 2em;
-          font-size: 12px;
-          line-height: 1.4;
-          position: relative;
-          z-index: 1;
         }
 
         .letter-body {
@@ -181,53 +144,52 @@ function buildLetterHtml(
         .letter-body p {
           margin-bottom: 1.2em;
           text-align: justify;
+          page-break-inside: avoid;
+          orphans: 3;
+          widows: 3;
+        }
+
+        .signature-section {
+          margin-top: 3em;
+          page-break-inside: avoid;
+          position: relative;
         }
 
         .signature-block {
-          margin-top: 2em;
           text-align: right;
-          position: relative;
-          z-index: 1;
+          margin-bottom: 2em;
         }
 
         .signature-block img {
-          max-height: 100px;
+          max-height: 150px; /* Increased by 50% from 100px */
           width: auto;
         }
 
-        .wax-seal {
-          display: none;
-          position: fixed;
-          bottom: ${template.marginBottom};
-          right: ${template.marginRight};
-          z-index: 2;
+        .signature-block p {
+          font-size: 16px;
+          font-style: italic;
         }
 
-        @page :last {
-          .wax-seal {
-            display: block;
-          }
+        /* Wax seal positioned absolutely at bottom-right of signature section */
+        .wax-seal {
+          position: absolute;
+          bottom: 0;
+          right: 0;
         }
 
         .wax-seal img {
-          width: 80px;
-          height: 80px;
+          width: 120px; /* Increased by 50% from 80px */
+          height: 120px;
         }
       </style>
     </head>
     <body>
       ${assets.backgroundDataUri ? '<div class="page-background"></div>' : ''}
 
-      <div class="page">
+      <div class="content">
         ${assets.headerDataUri ? `
           <div class="header">
             <img src="${assets.headerDataUri}" alt="">
-          </div>
-        ` : ''}
-
-        ${formattedRecipientAddress ? `
-          <div class="recipient-address">
-            ${formattedRecipientAddress}
           </div>
         ` : ''}
 
@@ -235,19 +197,21 @@ function buildLetterHtml(
           ${letterParagraphs}
         </div>
 
-        <div class="signature-block">
-          ${assets.signatureDataUri ? `
-            <img src="${assets.signatureDataUri}" alt="${template.character}">
-          ` : `
-            <p>${template.character}</p>
-          `}
-        </div>
-
-        ${assets.waxSealDataUri ? `
-          <div class="wax-seal">
-            <img src="${assets.waxSealDataUri}" alt="">
+        <div class="signature-section">
+          <div class="signature-block">
+            ${assets.signatureDataUri ? `
+              <img src="${assets.signatureDataUri}" alt="${template.character}">
+            ` : `
+              <p>${template.character}</p>
+            `}
           </div>
-        ` : ''}
+
+          ${assets.waxSealDataUri && template.waxSealLastPageOnly !== false ? `
+            <div class="wax-seal">
+              <img src="${assets.waxSealDataUri}" alt="">
+            </div>
+          ` : ''}
+        </div>
       </div>
     </body>
     </html>
@@ -262,7 +226,13 @@ function buildStoryHtml(
   assets: any,
   template: any
 ): string {
-  const storyParagraphs = order.generatedStory
+  // Clean up the story text - remove asterisks and other formatting artifacts
+  const cleanedStory = order.generatedStory
+    .replace(/\*+/g, '') // Remove asterisks
+    .replace(/^#+\s*/gm, '') // Remove markdown headers
+    .trim();
+
+  const storyParagraphs = cleanedStory
     .split('\n\n')
     .map((p: string) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
     .join('');
@@ -281,7 +251,7 @@ function buildStoryHtml(
 
         @page {
           size: ${template.paperSize};
-          margin: 0;
+          margin: ${template.marginTop} ${template.marginRight} ${template.marginBottom} ${template.marginLeft};
         }
 
         body {
@@ -289,45 +259,16 @@ function buildStoryHtml(
           color: ${template.primaryColor};
           font-size: 14pt;
           line-height: 1.8;
-        }
-
-        /*
-         * MARGIN BEHAVIOR DOCUMENTATION:
-         *
-         * Template margins (marginTop, marginBottom, marginLeft, marginRight) are applied
-         * via padding on the .page container. This creates a content area for the story text
-         * and images.
-         *
-         * ELEMENTS THAT RESPECT MARGINS (positioned within the content area):
-         * - h1 (story title)
-         * - .story-body (story text content with paragraphs)
-         * - .character-image (character illustration)
-         * - .the-end (ending text)
-         *
-         * DECORATIVE ELEMENTS THAT IGNORE MARGINS (fill entire page):
-         * - .page-background: Uses position:fixed with top:0, left:0, width:100%, height:100vh
-         *   to cover the entire page regardless of content margins. Background images extend
-         *   edge-to-edge and use opacity:0.3 to create a subtle watermark effect behind the
-         *   story text without interfering with readability.
-         *
-         * IMAGE POSITIONING:
-         * - Character images are rendered within the content area (inside margins) and are
-         *   centered horizontally with text-align:center. They respect the margin boundaries
-         *   and flow with the story content.
-         */
-        .page {
-          width: 100%;
-          min-height: 100vh;
           position: relative;
-          padding: ${template.marginTop} ${template.marginRight} ${template.marginBottom} ${template.marginLeft};
         }
 
+        /* Background that spans full page with opacity */
         .page-background {
           position: fixed;
           top: 0;
           left: 0;
-          width: 100%;
-          height: 100vh;
+          right: 0;
+          bottom: 0;
           z-index: -1;
           ${assets.backgroundDataUri ? `
             background-image: url('${assets.backgroundDataUri}');
@@ -338,12 +279,19 @@ function buildStoryHtml(
           ` : ''}
         }
 
+        /* Content flows naturally for proper page breaks */
+        .content {
+          position: relative;
+          z-index: 1;
+        }
+
         h1 {
           text-align: center;
           color: ${template.accentColor};
-          margin-bottom: 1.5em;
+          margin-bottom: 2em;
           font-size: 24pt;
           text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+          page-break-after: avoid;
         }
 
         .story-body {
@@ -352,9 +300,12 @@ function buildStoryHtml(
         }
 
         .story-body p {
-          margin-bottom: 1em;
+          margin-bottom: 1.2em;
           text-align: justify;
           text-indent: 2em;
+          page-break-inside: avoid;
+          orphans: 3;
+          widows: 3;
         }
 
         .story-body p:first-of-type {
@@ -362,54 +313,57 @@ function buildStoryHtml(
         }
 
         .story-body p:first-of-type::first-letter {
-          font-size: 3em;
+          font-size: 3.5em;
           line-height: 0.8;
           float: left;
           margin-right: 0.05em;
+          margin-top: -0.1em;
           color: ${template.accentColor};
           font-weight: bold;
         }
 
+        /* Character image - right-aligned and 50% larger */
         .character-image {
-          text-align: center;
-          margin: 2em 0;
-        }
-
-        .character-image {
-          width: 200px;
-          height: auto;
+          float: right;
+          margin: 1em 0 1em 2em;
+          clear: right;
         }
 
         .character-image img {
-          max-width: 200px;
-          max-height: 200px;
-          opacity: 0.8;
+          max-width: 300px; /* Increased by 50% from 200px */
+          max-height: 300px;
+          width: auto;
+          height: auto;
+          opacity: 0.85;
+          display: block;
         }
 
         .the-end {
           text-align: center;
-          margin-top: 3em;
-          font-size: 18pt;
+          margin-top: 4em;
+          font-size: 20pt;
           color: ${template.accentColor};
           font-style: italic;
+          page-break-inside: avoid;
+          clear: both;
         }
       </style>
     </head>
     <body>
       ${assets.backgroundDataUri ? '<div class="page-background"></div>' : ''}
 
-      <div class="page">
+      <div class="content">
         <h1>${storyTitle}</h1>
-
-        <div class="story-body">
-          ${storyParagraphs}
-        </div>
 
         ${assets.characterDataUri ? `
           <div class="character-image">
             <img src="${assets.characterDataUri}" alt="${template.character}">
           </div>
         ` : ''}
+
+        <div class="story-body">
+          ${storyParagraphs}
+        </div>
 
         <div class="the-end">~ The End ~</div>
       </div>
@@ -430,6 +384,9 @@ function buildEnvelopeHtml(
     ? template.returnAddress.replace(/\n/g, '<br>')
     : `${template.character}<br>North Pole`;
 
+  // Use the formatRecipientAddress function to get full address
+  const formattedRecipientAddress = formatRecipientAddress(order.recipientAddress);
+
   return `
     <!DOCTYPE html>
     <html>
@@ -445,31 +402,6 @@ function buildEnvelopeHtml(
           margin: 0;
         }
 
-        /*
-         * ENVELOPE MARGIN BEHAVIOR DOCUMENTATION:
-         *
-         * The envelope PDF uses a fixed size (9.5in x 4.125in) with NO template margins.
-         * All margins are hardcoded to "0" when rendering the envelope (see renderWithGotenberg
-         * call parameters: marginTop: '0', marginBottom: '0', marginLeft: '0', marginRight: '0').
-         *
-         * This is intentional because:
-         * 1. Envelopes have a specific physical dimension that must be exact
-         * 2. The border and background need to extend to the edges
-         * 3. Text elements use absolute positioning with fixed measurements (0.5in, 0.3in, etc.)
-         *
-         * DECORATIVE ELEMENTS THAT FILL ENTIRE ENVELOPE:
-         * - .envelope: Full-width/height container with background-image or gradient and border
-         *   that extends edge-to-edge
-         * - .decorative-border: Positioned with absolute coordinates (bottom:10px, left:10px, right:10px)
-         *
-         * POSITIONED ELEMENTS (use absolute positioning with fixed inch measurements):
-         * - .from: Return address at top-left (top:0.5in, left:0.5in)
-         * - .recipient: Centered text using flexbox on .envelope container
-         * - .stamp: Wax seal image at top-right (top:0.3in, right:0.3in)
-         * - .postmark: Special delivery mark near stamp (top:0.5in, right:1.5in)
-         *
-         * All positioning is absolute and measured in inches, independent of template margins.
-         */
         body {
           font-family: '${template.fontFamily}', serif;
           color: ${template.primaryColor};
@@ -499,8 +431,10 @@ function buildEnvelopeHtml(
 
         .recipient {
           text-align: center;
-          font-size: 24pt;
+          font-size: 18pt;
+          line-height: 1.4;
           z-index: 1;
+          max-width: 60%;
         }
 
         .from {
@@ -509,46 +443,6 @@ function buildEnvelopeHtml(
           left: 0.5in;
           font-size: 12pt;
           color: ${template.accentColor};
-        }
-
-        .stamp {
-          position: absolute;
-          top: 0.3in;
-          right: 0.3in;
-        }
-
-        .stamp img {
-          width: 60px;
-          height: 60px;
-        }
-
-        .postmark {
-          position: absolute;
-          top: 0.5in;
-          right: 1.5in;
-          transform: rotate(-5deg);
-          font-size: 10pt;
-          color: ${template.accentColor};
-          border: 2px solid ${template.accentColor};
-          padding: 5px 10px;
-          border-radius: 50%;
-          opacity: 0.7;
-        }
-
-        .decorative-border {
-          position: absolute;
-          bottom: 10px;
-          left: 10px;
-          right: 10px;
-          height: 20px;
-          background: repeating-linear-gradient(
-            45deg,
-            ${template.accentColor},
-            ${template.accentColor} 10px,
-            white 10px,
-            white 20px
-          );
-          opacity: 0.3;
         }
       </style>
     </head>
@@ -559,21 +453,8 @@ function buildEnvelopeHtml(
         </div>
 
         <div class="recipient">
-          <strong>${order.recipientName}</strong>
+          ${formattedRecipientAddress || `<strong>${order.recipientName}</strong>`}
         </div>
-
-        ${assets.waxSealDataUri ? `
-          <div class="stamp">
-            <img src="${assets.waxSealDataUri}" alt="">
-          </div>
-        ` : ''}
-
-        <div class="postmark">
-          SPECIAL<br>
-          DELIVERY
-        </div>
-
-        <div class="decorative-border"></div>
       </div>
     </body>
     </html>
