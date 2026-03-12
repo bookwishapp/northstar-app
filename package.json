@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build && node scripts/apply-migration.js",
     "migrate:prod": "prisma migrate deploy",
     "start": "next start",
     "lint": "next lint",
