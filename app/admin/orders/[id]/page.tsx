@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ResendEmailButton from './ResendEmailButton';
+import UpdateStatusButton from './UpdateStatusButton';
 
 // Force dynamic rendering to prevent database calls during build
 export const dynamic = 'force-dynamic';
@@ -286,6 +287,11 @@ export default async function OrderDetailsPage({
         {/* Actions */}
         <div className="bg-gray-50 px-4 py-5 sm:px-6">
           <div className="flex space-x-3">
+            <UpdateStatusButton
+              orderId={order.id}
+              currentStatus={order.status}
+              currentErrorMessage={order.errorMessage}
+            />
             {!order.claimedAt && order.customerEmail && (
               <ResendEmailButton
                 orderId={order.id}
