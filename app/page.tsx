@@ -6,14 +6,14 @@ function getCurrentHoliday(holidays: any[]) {
   const now = new Date();
   const month = now.getMonth() + 1;
 
-  // Priority order for seasonal holidays
-  if (month === 12) {
+  // Priority order for seasonal holidays (display starts month before)
+  if (month >= 11 && month <= 12) {
     return holidays.find(h => h.slug === 'christmas');
-  } else if (month === 10) {
+  } else if (month >= 9 && month <= 10) {
     return holidays.find(h => h.slug === 'halloween');
-  } else if (month >= 3 && month <= 4) {
+  } else if (month >= 2 && month <= 4) {
     return holidays.find(h => h.slug === 'easter');
-  } else if (month === 2) {
+  } else if (month === 1 || month === 2) {
     return holidays.find(h => h.slug === 'valentine');
   }
 
