@@ -279,31 +279,35 @@ async function getHoliday(slug: string) {
   }
 }
 
-// Generate static params for all holidays
-export async function generateStaticParams() {
-  try {
-    const holidays = await prisma.holiday.findMany({
-      select: {
-        slug: true,
-      },
-    });
+// Force dynamic rendering since database is not available at build time on Railway
+export const dynamic = 'force-dynamic';
 
-    return holidays.map((holiday) => ({
-      slug: holiday.slug,
-    }));
-  } catch (error) {
-    console.error('Error generating static params:', error);
-    // Return default holiday slugs when database is unavailable
-    return [
-      { slug: 'easter' },
-      { slug: 'christmas' },
-      { slug: 'birthday' },
-      { slug: 'halloween' },
-      { slug: 'tooth-fairy' },
-      { slug: 'valentine' },
-    ];
-  }
-}
+// Commented out to prevent build errors on Railway where database is not accessible during build
+// We'll render these pages dynamically at runtime instead
+// export async function generateStaticParams() {
+//   try {
+//     const holidays = await prisma.holiday.findMany({
+//       select: {
+//         slug: true,
+//       },
+//     });
+//
+//     return holidays.map((holiday) => ({
+//       slug: holiday.slug,
+//     }));
+//   } catch (error) {
+//     console.error('Error generating static params:', error);
+//     // Return default holiday slugs when database is unavailable
+//     return [
+//       { slug: 'easter' },
+//       { slug: 'christmas' },
+//       { slug: 'birthday' },
+//       { slug: 'halloween' },
+//       { slug: 'tooth-fairy' },
+//       { slug: 'valentine' },
+//     ];
+//   }
+// }
 
 export default async function Page({ params }: PageProps) {
   const resolvedParams = await params;

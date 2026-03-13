@@ -66,12 +66,12 @@ export default function CheckoutForm({ cart, sessionId }: CheckoutFormProps) {
 
   const hasPhysicalItems = cart.items.some((item) => item.deliveryType === 'physical');
 
-  const steps: { id: Step; label: string; required: boolean }[] = [
-    { id: 'customer', label: 'Contact', required: true },
-    { id: 'shipping-address', label: 'Shipping', required: hasPhysicalItems },
-    { id: 'billing-address', label: 'Billing', required: true },
-    { id: 'shipping-method', label: 'Delivery', required: hasPhysicalItems },
-    { id: 'review', label: 'Payment', required: true },
+  const steps = [
+    { id: 'customer' as Step, label: 'Contact', required: true },
+    { id: 'shipping-address' as Step, label: 'Shipping', required: hasPhysicalItems },
+    { id: 'billing-address' as Step, label: 'Billing', required: true },
+    { id: 'shipping-method' as Step, label: 'Delivery', required: hasPhysicalItems },
+    { id: 'review' as Step, label: 'Payment', required: true },
   ].filter((step) => step.required);
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);

@@ -119,6 +119,7 @@ Then use those instead of the endpoint approach.
 2. Code must be production-ready, not placeholders
 3. Complete the entire feature before moving on
 4. No console.log() placeholders - implement actual functionality
+5. **ALWAYS TEST BUILD BEFORE PUSHING** - Run `npm run build` locally to verify no TypeScript or build errors before pushing to Railway
 
 ## Template for Future Migrations
 When adding new migrations:

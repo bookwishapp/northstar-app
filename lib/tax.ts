@@ -136,7 +136,7 @@ export function parseTaxJurisdiction(
     };
   }
 
-  const jurisdiction = breakdown.jurisdiction;
+  const jurisdiction = (breakdown as any).jurisdiction;
 
   return {
     country: jurisdiction.country,
@@ -329,12 +329,12 @@ export async function calculateTax(
       breakdown.push({
         amount: item.amount / 100,
         rate: item.tax_rate_details?.percentage_decimal
-          ? item.tax_rate_details.percentage_decimal / 100
+          ? (item.tax_rate_details.percentage_decimal as unknown as number) / 100
           : 0,
         rateDisplay: item.tax_rate_details?.percentage_decimal
-          ? formatTaxRate(item.tax_rate_details.percentage_decimal / 100)
+          ? formatTaxRate((item.tax_rate_details.percentage_decimal as unknown as number) / 100)
           : '0%',
-        jurisdiction: formatJurisdictionDisplay(item.jurisdiction),
+        jurisdiction: formatJurisdictionDisplay((item as any).jurisdiction),
         taxabilityReason: item.taxability_reason || 'standard_rate',
         taxableAmount: item.taxable_amount / 100,
       });

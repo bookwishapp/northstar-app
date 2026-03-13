@@ -101,9 +101,9 @@ export async function POST(request: NextRequest) {
             name: `Shipping - ${shippingMethodLabel}`,
             description: `Shipping for ${physicalItemCount} item${physicalItemCount > 1 ? 's' : ''}`,
             metadata: {
-              type: 'shipping',
-              method: shippingMethod,
-              itemCount: physicalItemCount.toString(),
+              programId: 'shipping',
+              deliveryType: shippingMethod,
+              holidaySlug: 'shipping',
             },
           },
           unit_amount: shippingCostCents,

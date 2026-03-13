@@ -1,6 +1,9 @@
 import HomePage from '@/components/HomePage';
 import prisma from '@/lib/prisma';
 
+// Force dynamic rendering since database is not available at build time on Railway
+export const dynamic = 'force-dynamic';
+
 // Helper to get current active holiday based on date
 function getCurrentHoliday(holidays: any[]) {
   const now = new Date();
