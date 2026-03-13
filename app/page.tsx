@@ -28,7 +28,7 @@ async function getHolidays() {
         template: {
           select: {
             character: true,
-            characterDescription: true,
+            characterTone: true,
           },
         },
       },
@@ -42,7 +42,7 @@ async function getHolidays() {
       const now = new Date();
       const month = now.getMonth() + 1;
 
-      let status = 'soon';
+      let status: 'active' | 'soon' | 'always' | 'inactive' = 'soon';
       let statusLabel = 'Coming Soon';
 
       // Birthday and Tooth Fairy are always available
@@ -111,7 +111,7 @@ async function getHolidays() {
         statusLabel,
         theme: themeMap[holiday.slug] || 'theme-neutral',
         character: holiday.template?.character || 'Magical Character',
-        characterDescription: holiday.template?.characterDescription || '',
+        characterDescription: holiday.template?.characterTone || '',
       };
     });
 
@@ -127,7 +127,7 @@ async function getHolidays() {
         character: 'The Easter Bunny',
         theme: 'theme-easter',
         description: 'A personal letter from the Easter Bunny, with an enchanted story written just for them.',
-        status: 'active',
+        status: 'active' as const,
         statusLabel: 'Orders Open',
         characterDescription: '',
       },
@@ -138,7 +138,7 @@ async function getHolidays() {
         character: 'Santa Claus',
         theme: 'theme-christmas',
         description: 'A letter from Santa himself, brimming with holiday wonder and personal details.',
-        status: 'soon',
+        status: 'soon' as const,
         statusLabel: 'Opens Dec 1',
         characterDescription: '',
       },
@@ -149,7 +149,7 @@ async function getHolidays() {
         character: 'Birthday Wizard',
         theme: 'theme-birthday',
         description: 'A magical birthday letter that makes them feel like the star of their own story.',
-        status: 'always',
+        status: 'always' as const,
         statusLabel: 'Year-Round',
         characterDescription: '',
       },
@@ -160,7 +160,7 @@ async function getHolidays() {
         character: 'The Ghost',
         theme: 'theme-halloween',
         description: 'A delightfully spooky letter from a mysterious character just beyond the veil.',
-        status: 'soon',
+        status: 'soon' as const,
         statusLabel: 'Opens Oct 1',
         characterDescription: '',
       },
@@ -171,7 +171,7 @@ async function getHolidays() {
         character: 'The Tooth Fairy',
         theme: 'theme-tooth',
         description: 'Mark a tiny milestone with a letter from the Tooth Fairy, delivered right on cue.',
-        status: 'always',
+        status: 'always' as const,
         statusLabel: 'Year-Round',
         characterDescription: '',
       },
@@ -182,7 +182,7 @@ async function getHolidays() {
         character: 'Cupid',
         theme: 'theme-valentine',
         description: 'A heartfelt letter that lets them know just how cherished and wonderful they are.',
-        status: 'soon',
+        status: 'soon' as const,
         statusLabel: 'Opens Feb 1',
         characterDescription: '',
       }

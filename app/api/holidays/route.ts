@@ -10,13 +10,12 @@ export async function GET() {
           select: {
             id: true,
             character: true,
-            characterDescription: true,
-            tone: true,
-            headerImageKey: true,
+            characterTone: true,
+            headerKey: true,
             envelopeBackgroundKey: true,
-            signatureImageKey: true,
-            waxSealImageKey: true,
-            emailHeaderImageKey: true,
+            signatureKey: true,
+            waxSealKey: true,
+            emailHeaderKey: true,
           },
         },
         programs: {
@@ -118,7 +117,7 @@ export async function GET() {
         statusLabel,
         theme: themeMap[holiday.slug] || 'theme-neutral',
         character: holiday.template?.character || 'Magical Character',
-        characterDescription: holiday.template?.characterDescription || '',
+        characterDescription: holiday.template?.characterTone || '',
         template: holiday.template,
         programs: holiday.programs.map(program => ({
           id: program.id,

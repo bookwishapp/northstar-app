@@ -35,7 +35,7 @@ async function getHoliday(slug: string) {
     const now = new Date();
     const month = now.getMonth() + 1;
 
-    let status = 'soon';
+    let status: 'active' | 'soon' | 'always' | 'inactive' = 'soon';
     let statusLabel = 'Coming Soon';
 
     // Birthday and Tooth Fairy are always available
@@ -149,7 +149,7 @@ async function getHoliday(slug: string) {
       theme: themeMap[holiday.slug] || 'theme-neutral',
       isActive: holiday.isActive,
       character: holiday.template?.character || 'Magical Character',
-      characterDescription: holiday.template?.characterDescription || '',
+      characterDescription: holiday.template?.characterTone || '',
       programs: transformedPrograms,
     };
   } catch (error) {
@@ -162,7 +162,7 @@ async function getHoliday(slug: string) {
         slug: 'easter',
         name: 'Easter',
         description: 'A personal letter from the Easter Bunny, with an enchanted story written just for them.',
-        status: 'active',
+        status: 'active' as const,
         statusLabel: 'Orders Open',
         theme: 'theme-easter',
         isActive: true,
@@ -213,7 +213,7 @@ async function getHoliday(slug: string) {
         slug: 'christmas',
         name: 'Christmas',
         description: 'A letter from Santa himself, brimming with holiday wonder and personal details.',
-        status: 'soon',
+        status: 'soon' as const,
         statusLabel: 'Opens Dec 1',
         theme: 'theme-christmas',
         isActive: true,
@@ -226,7 +226,7 @@ async function getHoliday(slug: string) {
         slug: 'birthday',
         name: 'Birthday',
         description: 'A magical birthday letter that makes them feel like the star of their own story.',
-        status: 'always',
+        status: 'always' as const,
         statusLabel: 'Year-Round',
         theme: 'theme-birthday',
         isActive: true,
@@ -239,7 +239,7 @@ async function getHoliday(slug: string) {
         slug: 'halloween',
         name: 'Halloween',
         description: 'A delightfully spooky letter from a mysterious character just beyond the veil.',
-        status: 'soon',
+        status: 'soon' as const,
         statusLabel: 'Opens Oct 1',
         theme: 'theme-halloween',
         isActive: true,
@@ -252,7 +252,7 @@ async function getHoliday(slug: string) {
         slug: 'tooth-fairy',
         name: 'Tooth Fairy',
         description: 'Mark a tiny milestone with a letter from the Tooth Fairy, delivered right on cue.',
-        status: 'always',
+        status: 'always' as const,
         statusLabel: 'Year-Round',
         theme: 'theme-tooth',
         isActive: true,
@@ -265,7 +265,7 @@ async function getHoliday(slug: string) {
         slug: 'valentine',
         name: "Valentine's Day",
         description: 'A heartfelt letter that lets them know just how cherished and wonderful they are.',
-        status: 'soon',
+        status: 'soon' as const,
         statusLabel: 'Opens Feb 1',
         theme: 'theme-valentine',
         isActive: true,
