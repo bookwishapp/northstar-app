@@ -11,10 +11,10 @@ function getCurrentHoliday(holidays: any[]) {
     return holidays.find(h => h.slug === 'christmas');
   } else if (month >= 9 && month <= 10) {
     return holidays.find(h => h.slug === 'halloween');
-  } else if (month >= 2 && month <= 4) {
-    return holidays.find(h => h.slug === 'easter');
   } else if (month === 1 || month === 2) {
     return holidays.find(h => h.slug === 'valentine');
+  } else if (month >= 3 && month <= 4) {
+    return holidays.find(h => h.slug === 'easter');
   }
 
   // Default to birthday if no seasonal holiday
