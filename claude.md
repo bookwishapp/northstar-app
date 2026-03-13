@@ -104,6 +104,12 @@ Then use those instead of the endpoint approach.
 3. Always remove sensitive endpoints after use
 4. Document the migration in git commits for tracking
 
+## Development Rules
+1. **NO TODOs ALLOWED** - All features must be fully implemented, not stubbed
+2. Code must be production-ready, not placeholders
+3. Complete the entire feature before moving on
+4. No console.log() placeholders - implement actual functionality
+
 ## Template for Future Migrations
 When adding new migrations:
 1. Create migration locally: `npx prisma migrate dev --name your_migration_name`
