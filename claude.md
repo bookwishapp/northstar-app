@@ -65,7 +65,9 @@ export async function GET(request: Request) {
 #### 3. Deploy Process
 1. Push code with migration endpoint
 2. Railway builds and deploys the app
-3. Once deployed, visit: `https://your-app.railway.app/api/migrate?secret=run-migration-2024`
+3. Once deployed, visit: `https://[app-name]-production-[id].up.railway.app/api/migrate?secret=run-migration-2024`
+   - Example: `https://northstar-app-production-5347.up.railway.app/api/migrate?secret=run-migration-2024`
+   - Note: Railway URLs include a numeric ID after "production"
 4. Check response for success
 5. Remove migration endpoint and redeploy
 
