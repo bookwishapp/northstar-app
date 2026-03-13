@@ -101,7 +101,7 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
             <div className="step">
               <img
                 className="step-img"
-                src="/images/envelope-card.jpg"
+                src={`/images/${heroHoliday.slug}-card.jpg`}
                 alt="Envelope with wax seal"
               />
               <p className="step-num">Step Two</p>
