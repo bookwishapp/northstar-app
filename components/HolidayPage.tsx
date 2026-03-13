@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import CartButton from './CartButton';
+import { useCart } from '@/context/CartContext';
 
 interface Program {
   id: string;
@@ -38,6 +40,8 @@ interface HolidayPageProps {
 export default function HolidayPage({ holiday }: HolidayPageProps) {
   const [mounted, setMounted] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+  const [selectedDeliveryType, setSelectedDeliveryType] = useState<{ [key: string]: 'digital' | 'physical' }>({});
+  const { addItem } = useCart();
 
   useEffect(() => {
     setMounted(true);
@@ -63,6 +67,7 @@ export default function HolidayPage({ holiday }: HolidayPageProps) {
           <Link href="/holidays/easter">Easter</Link>
           <Link href="/holidays/christmas">Christmas</Link>
           <Link href="/holidays/halloween">Halloween</Link>
+          <CartButton />
           <Link href="/track" className="cta">Track My Letter</Link>
         </div>
       </nav>
@@ -179,23 +184,62 @@ export default function HolidayPage({ holiday }: HolidayPageProps) {
                     </ul>
 
                     {isActive && program.isActive && (
-                      <button
-                        className="cta"
-                        style={{
-                          width: '100%',
-                          marginTop: '1.5rem',
-                          background: selectedProgram === program.id ? 'var(--accent)' : 'transparent',
-                          border: '2px solid var(--accent)',
-                          color: selectedProgram === program.id ? 'white' : 'var(--accent)',
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // TODO: Navigate to checkout
-                          console.log(`Checkout for ${holiday.name} - ${program.name}`);
-                        }}
-                      >
-                        Select {program.name}
-                      </button>
+                      <>
+                        {program.deliveryTypes.length > 1 && (
+                          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
+                            {program.deliveryTypes.map((type) => (
+                              <button
+                                key={type}
+                                style={{
+                                  flex: 1,
+                                  padding: '0.5rem',
+                                  background: selectedDeliveryType[program.id] === type ? 'var(--accent)' : 'transparent',
+                                  border: '1px solid var(--accent)',
+                                  color: selectedDeliveryType[program.id] === type ? 'white' : 'var(--accent)',
+                                  cursor: 'pointer',
+                                  fontSize: '0.85rem',
+                                  transition: 'all 0.2s',
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedDeliveryType({ ...selectedDeliveryType, [program.id]: type as 'digital' | 'physical' });
+                                }}
+                              >
+                                {type === 'digital' ? 'Digital' : 'Physical'} - $
+                                {type === 'digital'
+                                  ? (program.priceDigital! / 100).toFixed(0)
+                                  : (program.pricePhysical! / 100).toFixed(0)
+                                }
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          className="cta"
+                          style={{
+                            width: '100%',
+                            marginTop: '1rem',
+                            background: 'var(--accent)',
+                            border: '2px solid var(--accent)',
+                            color: 'white',
+                          }}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const deliveryType = program.deliveryTypes.length === 1
+                              ? program.deliveryTypes[0] as 'digital' | 'physical'
+                              : selectedDeliveryType[program.id] || program.deliveryTypes[0] as 'digital' | 'physical';
+
+                            try {
+                              await addItem(program.id, deliveryType);
+                            } catch (error) {
+                              console.error('Failed to add item to cart:', error);
+                              alert('Failed to add item to cart. Please try again.');
+                            }
+                          }}
+                        >
+                          Add to Cart
+                        </button>
+                      </>
                     )}
                   </div>
                 );

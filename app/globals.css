@@ -907,3 +907,41 @@ footer::before {
   height: 1px;
   background: linear-gradient(to right, transparent, var(--gold), transparent);
 }
+
+/* ── CART BUTTON ────────────────────────────────────────────── */
+.cart-button {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s;
+}
+
+.cart-button:hover {
+  color: var(--gold);
+}
+
+.cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}

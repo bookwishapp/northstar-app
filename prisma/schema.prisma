@@ -75,26 +75,43 @@ model Order {
   status            String      @default("pending_claim")
   errorMessage      String?     // last error if status = failed
 
+  // Payment & Checkout (added for website checkout flow)
+  stripeSessionId       String?   // Stripe Checkout Session ID
+  stripePaymentIntentId String?   // Stripe Payment Intent ID
+  paymentStatus         String?   // "pending" | "paid" | "failed" | "refunded"
+  paidAt                DateTime? // When payment was completed
+
+  // Pricing breakdown
+  subtotal          Float?      // Sum of item prices before tax/shipping
+  shippingCost      Float?      // Calculated shipping cost
+  taxAmount         Float?      // Calculated tax amount
+  totalAmount       Float?      // Final total (subtotal + shipping + tax)
+  shippingMethod    String?     // "first_class" | "priority"
+  taxRate           Float?      // Tax rate applied (e.g., 0.0875 for 8.75%)
+  taxJurisdiction   String?     // Tax jurisdiction (e.g., "NY", "CA")
+  billingAddress    Json?       // Billing address from Stripe
+
   program           Program     @relation(fields: [programId], references: [id])
 }
 
 model Program {
-  id              String    @id @default(cuid())
-  holidaySlug     String    // "christmas" | "easter" | "birthday" | etc.
+  id              String      @id @default(cuid())
+  holidaySlug     String      // "christmas" | "easter" | "birthday" | etc.
   holidayId       String?
-  name            String    // "Santa Letter — Deluxe"
-  tier            String    // "standard" | "deluxe"
-  deliveryTypes   String[]  // ["digital", "physical"] or just ["digital"]
-  productTypes    String[]  @default(["letter", "story"]) // ["letter"], ["story"], or ["letter", "story"]
+  name            String      // "Santa Letter — Deluxe"
+  tier            String      // "standard" | "deluxe"
+  deliveryTypes   String[]    // ["digital", "physical"] or just ["digital"]
+  productTypes    String[]    @default(["letter", "story"]) // ["letter"], ["story"], or ["letter", "story"]
   priceDigital    Float?
   pricePhysical   Float?
   description     String?
-  features        String[]  @default([])
-  isActive        Boolean   @default(true)
+  features        String[]    @default([])
+  isActive        Boolean     @default(true)
   templateId      String
-  template        Template  @relation(fields: [templateId], references: [id])
-  holiday         Holiday?  @relation(fields: [holidayId], references: [id])
+  template        Template    @relation(fields: [templateId], references: [id])
+  holiday         Holiday?    @relation(fields: [holidayId], references: [id])
   orders          Order[]
+  cartItems       CartItem[]
 }
 
 model Template {
@@ -156,4 +173,25 @@ model AdminUser {
   email       String    @unique
   passwordHash String
   createdAt   DateTime  @default(now())
+}
+
+model Cart {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  sessionId   String      @unique // Browser session ID for cart persistence
+  expiresAt   DateTime    // Cart expiration time (e.g., 24 hours from creation)
+
+  items       CartItem[]
+}
+
+model CartItem {
+  id            String    @id @default(cuid())
+  cartId        String
+  programId     String
+  quantity      Int       @default(1)
+  deliveryType  String    // "digital" | "physical"
+
+  cart          Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  program       Program   @relation(fields: [programId], references: [id])
 }

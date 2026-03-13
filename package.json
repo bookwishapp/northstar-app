@@ -31,6 +31,8 @@
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^5.10.2",
+    "@stripe/react-stripe-js": "^5.6.1",
+    "@stripe/stripe-js": "^8.9.0",
     "@types/handlebars": "^4.0.40",
     "bcryptjs": "^3.0.3",
     "handlebars": "^4.7.8",
@@ -40,6 +42,7 @@
     "openai": "^4.28.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "stripe": "^20.4.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

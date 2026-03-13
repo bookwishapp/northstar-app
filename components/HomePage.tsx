@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import CartButton from './CartButton';
 
 interface Holiday {
   id: string;
@@ -48,6 +49,7 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
           <Link href="/holidays/christmas">Christmas</Link>
           <Link href="/holidays/halloween">Halloween</Link>
           <Link href="#holidays">All Holidays</Link>
+          <CartButton />
           <Link href="/track" className="cta">Track My Letter</Link>
         </div>
       </nav>
