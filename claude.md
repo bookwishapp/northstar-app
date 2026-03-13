@@ -82,6 +82,16 @@ After migration succeeds:
 ❌ DON'T put migration in start script - will fail every restart
 ❌ DON'T try to use DATABASE_URL during build - connection will fail
 ❌ DON'T forget to remove the migration endpoint after use
+❌ DON'T deploy new code that needs schema changes before running migration - Prisma Client will expect columns that don't exist yet
+
+### If Code Is Deployed Before Migration (Emergency Fix)
+If you accidentally deploy code that expects schema changes before running the migration:
+1. Create emergency migration endpoint: `app/api/migrate-emergency/route.ts`
+2. This endpoint uses explicit DATABASE_URL and doesn't depend on Prisma Client initialization
+3. Deploy the emergency endpoint
+4. Access it: `https://[app-name]-production-[id].up.railway.app/api/migrate-emergency?secret=emergency-migration-2024`
+5. If migration partially applied, the endpoint will try to mark it as resolved
+6. After success, remove both migration endpoints and redeploy
 
 ### Why This Is Necessary
 Railway's architecture:
