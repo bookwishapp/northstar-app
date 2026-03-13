@@ -100,6 +100,16 @@ nav {
   cursor: pointer;
 }
 
+.nav-logo-text {
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
 .nav-links {
   display: flex;
   gap: 2rem;
@@ -485,6 +495,13 @@ footer .footer-logo {
   height: 48px;
   opacity: 0.5;
   margin-bottom: 1rem;
+}
+
+footer .footer-logo-large {
+  height: 144px; /* 3x larger than default 48px */
+  opacity: 0.5;
+  margin: 0 auto 1.5rem;
+  display: block;
 }
 
 footer p {

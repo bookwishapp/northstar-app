@@ -42,7 +42,7 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
     <div className={theme}>
       {/* Navigation */}
       <nav>
-        <img src="/logo.png" className="nav-logo" alt="North Star Postal" />
+        <span className="nav-logo-text">North Star Postal</span>
         <div className="nav-links">
           <Link href="/holidays/easter">Easter</Link>
           <Link href="/holidays/christmas">Christmas</Link>
@@ -60,7 +60,7 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
             backgroundImage: `url('/images/${heroHoliday.slug}-hero.jpg')`
           }}
         />
-        <div className="hero-content">
+        <div className="hero-content hero-left-third">
           <img src="/logo-large.png" className="hero-logo" alt="North Star Postal" />
           <p className="hero-tagline">
             Personalized letters from magical characters,<br />
@@ -101,8 +101,8 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
             <div className="step">
               <img
                 className="step-img"
-                src="/images/letter-sealed.jpg"
-                alt="Letter sealed with wax"
+                src="/images/envelope-card.jpg"
+                alt="Envelope with wax seal"
               />
               <p className="step-num">Step Two</p>
               <h3>Carefully prepared and sealed for delivery</h3>
@@ -188,7 +188,7 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
 
       {/* Footer */}
       <footer>
-        <img src="/logo.png" className="footer-logo" alt="North Star Postal" />
+        <img src="/logo.png" className="footer-logo footer-logo-large" alt="North Star Postal" />
         <p>North Star Postal &bull; Magical Mail for Magical Children</p>
         <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', opacity: 0.5 }}>
           northstarpostal.com &bull; Privacy &bull; Terms
