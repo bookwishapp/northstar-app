@@ -96,6 +96,61 @@ export default async function OrderDetailsPage({
             </div>
 
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500">Order Source</dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                  order.source === 'website' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {order.source || 'admin'}
+                </span>
+              </dd>
+            </div>
+
+            {order.paymentStatus && (
+              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">Payment Status</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                    order.paymentStatus === 'paid'
+                      ? 'bg-green-100 text-green-800'
+                      : order.paymentStatus === 'failed'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {order.paymentStatus}
+                  </span>
+                  {order.paidAt && (
+                    <span className="ml-2 text-sm text-gray-500">
+                      on {new Date(order.paidAt).toLocaleString()}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            )}
+
+            {order.subtotal !== null && (
+              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">Order Total</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <div className="space-y-1">
+                    <div>Subtotal: ${(order.subtotal || 0).toFixed(2)}</div>
+                    {order.shippingCost && order.shippingCost > 0 && (
+                      <div>
+                        Shipping ({order.shippingMethod}): ${order.shippingCost.toFixed(2)}
+                      </div>
+                    )}
+                    {order.taxAmount && order.taxAmount > 0 && (
+                      <div>Tax: ${order.taxAmount.toFixed(2)}</div>
+                    )}
+                    <div className="font-semibold pt-1 border-t border-gray-200">
+                      Total: ${(order.totalAmount || order.subtotal || 0).toFixed(2)}
+                    </div>
+                  </div>
+                </dd>
+              </div>
+            )}
+
+            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Customer Email</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 {order.customerEmail || '-'}
@@ -116,6 +171,40 @@ export default async function OrderDetailsPage({
               </dd>
             </div>
 
+            {order.billingAddress && (
+              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">Billing Address</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <div className="text-sm">
+                    <div>{(order.billingAddress as any).name}</div>
+                    <div>{(order.billingAddress as any).line1}</div>
+                    {(order.billingAddress as any).line2 && <div>{(order.billingAddress as any).line2}</div>}
+                    <div>
+                      {(order.billingAddress as any).city}, {(order.billingAddress as any).state} {(order.billingAddress as any).zip}
+                    </div>
+                    <div>{(order.billingAddress as any).country}</div>
+                  </div>
+                </dd>
+              </div>
+            )}
+
+            {order.recipientAddress && order.deliveryType === 'physical' && (
+              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">Shipping Address</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <div className="text-sm">
+                    <div>{(order.recipientAddress as any).name}</div>
+                    <div>{(order.recipientAddress as any).line1}</div>
+                    {(order.recipientAddress as any).line2 && <div>{(order.recipientAddress as any).line2}</div>}
+                    <div>
+                      {(order.recipientAddress as any).city}, {(order.recipientAddress as any).state} {(order.recipientAddress as any).zip}
+                    </div>
+                    <div>{(order.recipientAddress as any).country}</div>
+                  </div>
+                </dd>
+              </div>
+            )}
+
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">External Order ID</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
@@ -123,7 +212,25 @@ export default async function OrderDetailsPage({
               </dd>
             </div>
 
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+            {order.stripeSessionId && (
+              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt className="text-sm font-medium text-gray-500">Stripe Payment Info</dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <div className="space-y-1">
+                    <div className="text-xs">
+                      <span className="font-medium">Session:</span> {order.stripeSessionId.slice(0, 30)}...
+                    </div>
+                    {order.stripePaymentIntentId && (
+                      <div className="text-xs">
+                        <span className="font-medium">Payment Intent:</span> {order.stripePaymentIntentId.slice(0, 30)}...
+                      </div>
+                    )}
+                  </div>
+                </dd>
+              </div>
+            )}
+
+            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Claim Token</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 <code className="text-xs">{order.claimToken}</code>

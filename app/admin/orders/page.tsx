@@ -116,6 +116,12 @@ export default async function OrdersPage({
                       Program
                     </th>
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Type
+                    </th>
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Payment
+                    </th>
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Status
                     </th>
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -148,6 +154,24 @@ export default async function OrdersPage({
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {order.program?.tier || '-'}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          order.source === 'website' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {order.source || 'admin'}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          order.paymentStatus === 'paid'
+                            ? 'bg-green-100 text-green-800'
+                            : order.paymentStatus === 'failed'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.paymentStatus || 'pending'}
+                        </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
