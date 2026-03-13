@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "migrate:prod": "prisma migrate deploy",
-    "start": "prisma migrate deploy && next start",
+    "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
