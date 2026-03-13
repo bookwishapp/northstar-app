@@ -10,6 +10,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Holiday {
+  id                String      @id @default(cuid())
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  slug              String      @unique
+  name              String
+  description       String?
+  isActive          Boolean     @default(true)
+
+  // Relations
+  template          Template?
+  programs          Program[]
+}
+
 model Order {
   id                String      @id @default(cuid())
   createdAt         DateTime    @default(now())
@@ -66,21 +81,26 @@ model Order {
 model Program {
   id              String    @id @default(cuid())
   holidaySlug     String    // "christmas" | "easter" | "birthday" | etc.
+  holidayId       String?
   name            String    // "Santa Letter — Deluxe"
   tier            String    // "standard" | "deluxe"
   deliveryTypes   String[]  // ["digital", "physical"] or just ["digital"]
   productTypes    String[]  @default(["letter", "story"]) // ["letter"], ["story"], or ["letter", "story"]
   priceDigital    Float?
   pricePhysical   Float?
+  description     String?
+  features        String[]  @default([])
   isActive        Boolean   @default(true)
   templateId      String
   template        Template  @relation(fields: [templateId], references: [id])
+  holiday         Holiday?  @relation(fields: [holidayId], references: [id])
   orders          Order[]
 }
 
 model Template {
   id              String    @id @default(cuid())
   holidaySlug     String
+  holidayId       String?   @unique
   name            String
   location        String    @default("North Pole")
   isActive        Boolean   @default(true)
@@ -128,6 +148,7 @@ model Template {
   personalizationFields Json?     // Array of field configs for claim form
 
   programs        Program[]
+  holiday         Holiday?  @relation(fields: [holidayId], references: [id])
 }
 
 model AdminUser {
