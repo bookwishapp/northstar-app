@@ -149,7 +149,7 @@ export default async function AdminDashboard() {
                       {order.customerName || 'Unclaimed'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.program.template.character}
+                      {order.program?.template?.character || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
