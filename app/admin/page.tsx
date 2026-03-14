@@ -23,7 +23,7 @@ async function getStats() {
         },
       },
     },
-  });
+  }).catch(() => []);
 
   return {
     totalOrders,
@@ -135,7 +135,13 @@ export default async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {stats.recentOrders.map((order) => (
+                {stats.recentOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                      No recent orders
+                    </td>
+                  </tr>
+                ) : stats.recentOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       <Link
@@ -166,7 +172,7 @@ export default async function AdminDashboard() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
