@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import OrderDetailsComponent from '@/components/orders/OrderDetails';
+
+// Force dynamic rendering to prevent database calls during build
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{
