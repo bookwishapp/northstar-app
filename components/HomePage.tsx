@@ -37,7 +37,11 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
 
   // Use current holiday theme or default to easter
   const theme = currentHoliday?.theme || 'theme-easter';
-  const heroHoliday = currentHoliday || holidays[0];
+  const heroHoliday = currentHoliday || holidays[0] || {
+    slug: 'easter',
+    name: 'Easter',
+    theme: 'theme-easter'
+  };
 
   return (
     <div className={theme}>
@@ -136,7 +140,7 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
             </p>
           </div>
           <div className="holidays-grid">
-            {holidays.map((holiday) => (
+            {holidays && holidays.length > 0 ? holidays.map((holiday) => (
               <div
                 key={holiday.slug}
                 className={`holiday-card ${holiday.status === 'soon' || holiday.status === 'inactive' ? 'inactive' : ''}`}
@@ -183,7 +187,9 @@ export default function HomePage({ holidays, currentHoliday }: HomePageProps) {
                   )}
                 </div>
               </div>
-            ))}
+            )) : (
+              <p style={{ textAlign: 'center', color: 'var(--text-dim)' }}>Loading holidays...</p>
+            )}
           </div>
         </div>
       </section>
