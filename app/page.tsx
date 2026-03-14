@@ -1,5 +1,5 @@
 import HomePage from '@/components/HomePage';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // Force dynamic rendering since database is not available at build time on Railway
 export const dynamic = 'force-dynamic';

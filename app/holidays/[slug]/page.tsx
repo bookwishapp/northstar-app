@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import HolidayPageComponent from '@/components/HolidayPage';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 interface PageProps {
   params: Promise<{
