@@ -172,7 +172,7 @@ export default async function AdminDashboard() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
-                )))}
+                ))}
               </tbody>
             </table>
           </div>
